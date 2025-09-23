@@ -1,0 +1,40 @@
+#!/bin/bash
+echo "Creating environment files..."
+
+# Backend .env
+cat > backend/.env << 'EOF'
+# Database
+DATABASE_URL="mongodb://careerbuddy:password@localhost:27017/careerbuddy_db?authSource=admin"
+
+# JWT Authentication
+JWT_SECRET="your-super-secret-jwt-key-change-in-production-please-use-a-secure-random-string"
+JWT_EXPIRES_IN="7d"
+
+# Backend API
+BACKEND_PORT=3001
+FRONTEND_URL="http://localhost:3000"
+
+# Email (for password reset, notifications)
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-app-password"
+
+# File Upload
+MAX_FILE_SIZE="5MB"
+UPLOAD_PATH="./uploads"
+
+# AI Services (placeholder for future Python services)
+AI_SERVICE_URL="http://localhost:5000"
+AI_SERVICE_API_KEY="placeholder-api-key"
+EOF
+
+# Frontend .env.local
+cat > frontend/.env.local << 'EOF'
+# Frontend Environment Variables
+NEXT_PUBLIC_API_URL="http://localhost:3001/api"
+EOF
+
+echo "Environment files created successfully!"
+echo ""
+echo "Now you can start the backend with: cd backend && npm start"

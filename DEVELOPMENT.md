@@ -17,7 +17,7 @@
 3. **Initialize Database**
    ```bash
    cd backend
-   npx prisma migrate dev --name init
+   npx prisma db push
    npx prisma db seed
    ```
 
@@ -25,6 +25,7 @@
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:3001/api
    - API Health Check: http://localhost:3001/api/health
+   - MongoDB: mongodb://localhost:27017
 
 ## 📁 Project Structure
 
@@ -64,7 +65,7 @@ npm run start:dev          # Start with hot reload
 npm run lint               # Run ESLint
 npm run test               # Run tests
 npx prisma studio          # Open database GUI
-npx prisma migrate dev     # Create new migration
+npx prisma db push         # Push schema changes to MongoDB
 ```
 
 ### Frontend Development
@@ -77,7 +78,7 @@ npm run lint               # Run ESLint
 npm run type-check         # TypeScript check
 ```
 
-## 🗄️ Database
+## 🗄️ Database (MongoDB)
 
 ### Schema Overview
 
@@ -176,7 +177,7 @@ adminOnlyEndpoint() { ... }
 ## 🐳 Docker Development
 
 ### Services
-- **postgres**: PostgreSQL 13 database
+- **mongodb**: MongoDB 7.0 database
 - **backend**: NestJS API (port 3001)
 - **frontend**: Next.js app (port 3000)
 
@@ -184,7 +185,7 @@ adminOnlyEndpoint() { ... }
 ```bash
 docker-compose up -d          # Start all services
 docker-compose logs backend   # View backend logs
-docker-compose exec postgres psql -U careerbuddy careerbuddy_db
+docker-compose exec mongodb mongosh careerbuddy_db
 docker-compose down           # Stop all services
 ```
 
@@ -248,8 +249,8 @@ npm run test:cov         # Coverage report
 
 1. **Database Connection Error**
    ```bash
-   docker-compose up -d postgres
-   # Wait for PostgreSQL to start
+   docker-compose up -d mongodb
+   # Wait for MongoDB to start
    ```
 
 2. **Prisma Client Out of Sync**

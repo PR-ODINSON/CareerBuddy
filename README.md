@@ -6,7 +6,7 @@ A comprehensive platform that helps students build, optimize, and manage their r
 
 - **Frontend**: Next.js 14 + TypeScript + TailwindCSS + shadcn/ui
 - **Backend**: NestJS + TypeScript + Prisma ORM
-- **Database**: PostgreSQL 13+
+- **Database**: MongoDB 7.0+
 - **Authentication**: JWT + Role-based access control
 - **AI Integration**: Python services (REST APIs)
 
@@ -31,7 +31,7 @@ careerbuddy/
 
 - Frontend: `cd frontend && npm run dev`
 - Backend: `cd backend && npm run start:dev`
-- Database: PostgreSQL runs on port 5432
+- Database: MongoDB runs on port 27017
 
 ## User Roles
 

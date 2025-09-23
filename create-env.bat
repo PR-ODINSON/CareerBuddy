@@ -2,7 +2,7 @@
 echo Creating environment files...
 
 echo # Database > backend\.env
-echo DATABASE_URL="postgresql://careerbuddy:password@localhost:5432/careerbuddy_db" >> backend\.env
+echo DATABASE_URL="mongodb://careerbuddy:password@localhost:27017/careerbuddy_db?authSource=admin" >> backend\.env
 echo. >> backend\.env
 echo # JWT Authentication >> backend\.env
 echo JWT_SECRET="your-super-secret-jwt-key-change-in-production-please-use-a-secure-random-string" >> backend\.env

@@ -1,19 +1,19 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:13
-    container_name: careerbuddy_postgres
+  mongodb:
+    image: mongo:7.0
+    container_name: careerbuddy_mongodb
     environment:
-      POSTGRES_DB: careerbuddy_db
-      POSTGRES_USER: careerbuddy
-      POSTGRES_PASSWORD: password
+      MONGO_INITDB_ROOT_USERNAME: careerbuddy
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: careerbuddy_db
     ports:
-      - "5432:5432"
+      - "27017:27017"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mongodb_data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U careerbuddy -d careerbuddy_db"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -26,7 +26,7 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - DATABASE_URL=postgresql://careerbuddy:password@postgres:5432/careerbuddy_db
+      - DATABASE_URL=mongodb://careerbuddy:password@mongodb:27017/careerbuddy_db?authSource=admin
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - JWT_EXPIRES_IN=7d
       - FRONTEND_URL=http://localhost:3000
@@ -34,7 +34,7 @@ services:
       - ./backend:/app
       - /app/node_modules
     depends_on:
-      postgres:
+      mongodb:
         condition: service_healthy
     command: npm run start:dev
 
@@ -56,4 +56,4 @@ services:
     command: npm run dev
 
 volumes:
-  postgres_data:
+  mongodb_data:

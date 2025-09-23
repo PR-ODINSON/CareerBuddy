@@ -6,13 +6,13 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 // User entity with role-based access
 model User {
-  id          String   @id @default(uuid())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   email       String   @unique
   password    String
   firstName   String
@@ -44,8 +44,8 @@ model User {
 }
 
 model StudentProfile {
-  id           String  @id @default(uuid())
-  userId       String  @unique
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String  @unique @db.ObjectId
   user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   university   String?
@@ -69,8 +69,8 @@ model StudentProfile {
 }
 
 model CounselorProfile {
-  id           String  @id @default(uuid())
-  userId       String  @unique
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String  @unique @db.ObjectId
   user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   specialization String[]
@@ -86,8 +86,8 @@ model CounselorProfile {
 
 // Resume management
 model Resume {
-  id          String   @id @default(uuid())
-  userId      String
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   title       String
@@ -117,8 +117,8 @@ model Resume {
 }
 
 model ResumeVersion {
-  id         String   @id @default(uuid())
-  resumeId   String
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  resumeId   String   @db.ObjectId
   resume     Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   
   version    Int
@@ -133,8 +133,8 @@ model ResumeVersion {
 }
 
 model ResumeFeedback {
-  id          String       @id @default(uuid())
-  resumeId    String
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  resumeId    String       @db.ObjectId
   resume      Resume       @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   
   type        FeedbackType
@@ -146,7 +146,7 @@ model ResumeFeedback {
   
   // AI-generated or counselor feedback
   isAiGenerated Boolean    @default(true)
-  counselorId   String?
+  counselorId   String?    @db.ObjectId
   
   // Position in resume (for specific feedback)
   lineNumber    Int?
@@ -162,7 +162,7 @@ model ResumeFeedback {
 
 // Job management
 model Job {
-  id            String     @id @default(uuid())
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
   title         String
   company       String
   description   String
@@ -185,7 +185,7 @@ model Job {
   source        String?    // e.g., "company_website", "job_board"
   
   // Relations
-  createdBy     String
+  createdBy     String     @db.ObjectId
   creator       User       @relation("JobCreator", fields: [createdBy], references: [id])
   applications  Application[]
   
@@ -198,12 +198,12 @@ model Job {
 
 // Application tracking
 model Application {
-  id          String            @id @default(uuid())
-  userId      String
+  id          String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String            @db.ObjectId
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobId       String
+  jobId       String            @db.ObjectId
   job         Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  resumeId    String?
+  resumeId    String?           @db.ObjectId
   resume      Resume?           @relation(fields: [resumeId], references: [id])
   
   status      ApplicationStatus @default(APPLIED)
@@ -222,8 +222,8 @@ model Application {
 }
 
 model Interview {
-  id            String        @id @default(uuid())
-  applicationId String
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  applicationId String        @db.ObjectId
   application   Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   
   type          InterviewType
@@ -245,7 +245,7 @@ model Interview {
 
 // Skills management
 model Skill {
-  id          String      @id @default(uuid())
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
   name        String      @unique
   category    SkillCategory
   description String?
@@ -262,10 +262,10 @@ model Skill {
 
 // Counseling sessions
 model CounselingSession {
-  id          String           @id @default(uuid())
-  studentId   String
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  studentId   String           @db.ObjectId
   student     User             @relation("SessionStudent", fields: [studentId], references: [id])
-  counselorId String
+  counselorId String           @db.ObjectId
   counselor   User             @relation("SessionCounselor", fields: [counselorId], references: [id])
   
   title       String
@@ -287,8 +287,8 @@ model CounselingSession {
 
 // Analytics and reporting
 model UserAnalytics {
-  id        String   @id @default(uuid())
-  userId    String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Activity tracking
