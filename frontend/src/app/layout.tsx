@@ -6,7 +6,12 @@ import { QueryProvider } from '@/lib/react-query';
 import { AuthProvider } from '@/lib/auth-context';
 import { Toaster } from '@/components/ui/toaster';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  fallback: ['system-ui', 'arial'],
+  adjustFontFallback: false,
+});
 
 export const metadata: Metadata = {
   title: 'CareerBuddy - AI-Powered Resume & Career Assistant',
