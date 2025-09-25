@@ -4,13 +4,14 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
 // Core modules
-import { PrismaModule } from './prisma/prisma.module';
+import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { ResumesModule } from './resumes/resumes.module';
-import { JobsModule } from './jobs/jobs.module';
-import { ApplicationsModule } from './applications/applications.module';
-import { AdminModule } from './admin/admin.module';
+// TODO: Update these modules to use MongoDB instead of Prisma
+// import { ResumesModule } from './resumes/resumes.module';
+// import { JobsModule } from './jobs/jobs.module';
+// import { ApplicationsModule } from './applications/applications.module';
+// import { AdminModule } from './admin/admin.module';
 
 // Controllers
 import { AppController } from './app.controller';
@@ -30,14 +31,17 @@ import { AppService } from './app.service';
       serveRoot: '/api/uploads',
     }),
 
+    // Database
+    DatabaseModule,
+
     // Core modules
-    PrismaModule,
     AuthModule,
     UsersModule,
-    ResumesModule,
-    JobsModule,
-    ApplicationsModule,
-    AdminModule,
+    // TODO: Re-enable these modules after updating them to use MongoDB
+    // ResumesModule,
+    // JobsModule,
+    // ApplicationsModule,
+    // AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

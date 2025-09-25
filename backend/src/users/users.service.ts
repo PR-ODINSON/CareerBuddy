@@ -1,37 +1,29 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User, UserDocument } from './schemas/user.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+  ) {}
 
   async findAll() {
-    return this.prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        isActive: true,
-        isVerified: true,
-        avatar: true,
-        createdAt: true,
-        studentProfile: true,
-        counselorProfile: true,
-      },
-    });
+    return this.userModel.find({}, {
+      password: 0, // Exclude password from results
+      passwordResetToken: 0,
+      emailVerificationToken: 0,
+    }).exec();
   }
 
   async findById(id: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-      include: {
-        studentProfile: true,
-        counselorProfile: true,
-      },
-    });
+    const user = await this.userModel.findById(id, {
+      password: 0,
+      passwordResetToken: 0,
+      emailVerificationToken: 0,
+    }).exec();
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -41,58 +33,79 @@ export class UsersService {
   }
 
   async findByEmail(email: string) {
-    return this.prisma.user.findUnique({
-      where: { email },
-      include: {
-        studentProfile: true,
-        counselorProfile: true,
-      },
-    });
+    return this.userModel.findOne({ email }).exec();
+  }
+
+  async findByEmailWithPassword(email: string) {
+    return this.userModel.findOne({ email }).select('+password').exec();
+  }
+
+  async create(userData: Partial<User>) {
+    const user = new this.userModel(userData);
+    return user.save();
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    const user = await this.findById(id);
+    const user = await this.userModel.findByIdAndUpdate(
+      id,
+      updateUserDto,
+      { new: true, runValidators: true }
+    ).select('-password -passwordResetToken -emailVerificationToken').exec();
 
-    return this.prisma.user.update({
-      where: { id },
-      data: {
-        ...updateUserDto,
-        ...(updateUserDto.studentProfile && {
-          studentProfile: {
-            update: updateUserDto.studentProfile,
-          },
-        }),
-        ...(updateUserDto.counselorProfile && {
-          counselorProfile: {
-            update: updateUserDto.counselorProfile,
-          },
-        }),
-      },
-      include: {
-        studentProfile: true,
-        counselorProfile: true,
-      },
-    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 
   async deactivate(id: string) {
-    return this.prisma.user.update({
-      where: { id },
-      data: { isActive: false },
-    });
+    const user = await this.userModel.findByIdAndUpdate(
+      id,
+      { isActive: false },
+      { new: true }
+    ).select('-password').exec();
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 
   async activate(id: string) {
-    return this.prisma.user.update({
-      where: { id },
-      data: { isActive: true },
-    });
+    const user = await this.userModel.findByIdAndUpdate(
+      id,
+      { isActive: true },
+      { new: true }
+    ).select('-password').exec();
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 
   async verifyEmail(id: string) {
-    return this.prisma.user.update({
-      where: { id },
-      data: { isVerified: true },
-    });
+    const user = await this.userModel.findByIdAndUpdate(
+      id,
+      { emailVerified: true, emailVerificationToken: undefined },
+      { new: true }
+    ).select('-password').exec();
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  async updateLastLogin(id: string) {
+    return this.userModel.findByIdAndUpdate(
+      id,
+      { lastLogin: new Date() },
+      { new: true }
+    ).exec();
   }
 }

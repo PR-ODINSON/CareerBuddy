@@ -171,18 +171,62 @@ export default function HomePage() {
   ];
 
   const companyLogos = [
-    { name: 'Google', logo: 'G', color: 'from-blue-500 to-green-500' },
-    { name: 'Microsoft', logo: 'M', color: 'from-blue-600 to-cyan-500' },
-    { name: 'Amazon', logo: 'A', color: 'from-orange-500 to-yellow-500' },
-    { name: 'Apple', logo: 'A', color: 'from-gray-600 to-gray-800' },
-    { name: 'Meta', logo: 'M', color: 'from-blue-500 to-purple-500' },
-    { name: 'Netflix', logo: 'N', color: 'from-red-500 to-red-700' },
-    { name: 'Tesla', logo: 'T', color: 'from-red-600 to-gray-700' },
-    { name: 'Spotify', logo: 'S', color: 'from-green-500 to-green-700' },
-    { name: 'Uber', logo: 'U', color: 'from-black to-gray-800' },
-    { name: 'Airbnb', logo: 'A', color: 'from-pink-500 to-red-500' },
-    { name: 'LinkedIn', logo: 'L', color: 'from-blue-600 to-blue-800' },
-    { name: 'Adobe', logo: 'A', color: 'from-red-500 to-purple-600' }
+    { 
+      name: 'Google', 
+      logo: (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+      ),
+      color: 'from-blue-500 to-green-500',
+      bgColor: 'bg-white'
+    },
+    { 
+      name: 'Microsoft', 
+      logo: (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+          <path fill="#F25022" d="M1 1h10v10H1z"/>
+          <path fill="#00A4EF" d="M13 1h10v10H13z"/>
+          <path fill="#7FBA00" d="M1 13h10v10H1z"/>
+          <path fill="#FFB900" d="M13 13h10v10H13z"/>
+        </svg>
+      ),
+      color: 'from-blue-600 to-cyan-500',
+      bgColor: 'bg-white'
+    },
+    { 
+      name: 'Apple', 
+      logo: (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" fill="#000000"/>
+        </svg>
+      ),
+      color: 'from-gray-600 to-gray-800',
+      bgColor: 'bg-white'
+    },
+    { 
+      name: 'Meta', 
+      logo: (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
+        </svg>
+      ),
+      color: 'from-blue-500 to-purple-500',
+      bgColor: 'bg-white'
+    },
+    { 
+      name: 'Netflix', 
+      logo: (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+          <path d="M5.398 0v.006c3.028 8.556 5.37 15.175 8.348 23.596 2.344.058 4.85.398 4.854.398-2.8-7.924-5.923-16.747-8.487-24zm8.489 0v9.63L18.6 22.951c-.043-7.86-.004-15.913.002-22.95zM5.398 1.05V24c2.873-.358 5.398-.898 5.398-.898V1.05z" fill="#E50914"/>
+        </svg>
+      ),
+      color: 'from-red-500 to-red-700',
+      bgColor: 'bg-white'
+    }
   ];
 
   const testimonials = [
@@ -618,18 +662,20 @@ export default function HomePage() {
                 <div className="relative overflow-hidden">
                   <motion.div
                     className="flex space-x-8"
-                    animate={{ x: [0, -2000] }}
-                    transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                    animate={{ x: [0, -1200] }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear", repeatType: "loop" }}
                   >
-                    {[...companyLogos, ...companyLogos].map((company, index) => (
+                    {[...companyLogos, ...companyLogos, ...companyLogos].map((company, index) => (
                       <motion.div
                         key={index}
                         className="flex items-center space-x-2 flex-shrink-0"
                         whileHover={{ scale: 1.1, y: -2 }}
                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
                       >
-                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${company.color} flex items-center justify-center text-white font-bold text-sm shadow-lg`}>
-                          {company.logo}
+                        <div className={`${company.bgColor} w-10 h-10 rounded-xl shadow-lg flex items-center justify-center border border-white/20`}>
+                          <div className="text-gray-700">
+                            {company.logo}
+                          </div>
                         </div>
                         <span className="text-white/60 text-sm font-medium whitespace-nowrap">{company.name}</span>
                       </motion.div>
@@ -651,7 +697,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section ref={featuresRef} id="features" className="relative py-24 bg-gradient-to-b from-transparent via-white/95 to-violet-50/30">
+      <section ref={featuresRef} id="features" className="relative py-24 bg-gradient-to-b from-violet-50/30 via-indigo-50/40 to-slate-100/50">
         <div className="container mx-auto px-6">
           <motion.div 
             initial={{ y: 50, opacity: 0 }}
@@ -695,7 +741,7 @@ export default function HomePage() {
                     z: 50,
                     transition: { type: "spring", stiffness: 300, damping: 20 }
                   }}
-                  className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 h-full relative overflow-hidden"
+                  className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/20 h-full relative overflow-hidden hover:bg-white/15"
                 >
                   {/* Background gradient on hover */}
                   <motion.div
@@ -751,10 +797,10 @@ export default function HomePage() {
                     ))}
                   </motion.div>
                   
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-gray-800 transition-colors">
+                  <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-gray-100 transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors">
+                  <p className="text-gray-200 leading-relaxed group-hover:text-gray-100 transition-colors">
                   {feature.description}
                   </p>
                   
@@ -765,7 +811,7 @@ export default function HomePage() {
                     whileHover={{ x: 0, opacity: 1 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <ArrowRight className="h-5 w-5 text-gray-400" />
+                    <ArrowRight className="h-5 w-5 text-gray-300" />
                   </motion.div>
                 </motion.div>
               </motion.div>
@@ -802,19 +848,19 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -5 }}
-                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100"
+                className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/20 hover:bg-white/15"
               >
                 <div className="flex items-center space-x-4 mb-6">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-xl text-white">
                     {testimonial.logo}
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">{testimonial.name}</p>
-                    <p className="text-sm text-gray-600">{testimonial.role}</p>
-                    <p className="text-xs text-gray-500 font-medium">{testimonial.company}</p>
+                    <p className="font-bold text-white">{testimonial.name}</p>
+                    <p className="text-sm text-gray-200">{testimonial.role}</p>
+                    <p className="text-xs text-gray-300 font-medium">{testimonial.company}</p>
                   </div>
                 </div>
-                <blockquote className="text-gray-700 leading-relaxed text-lg">
+                <blockquote className="text-gray-100 leading-relaxed text-lg">
                   "{testimonial.content}"
                 </blockquote>
                 <div className="flex items-center mt-4">
@@ -840,9 +886,9 @@ export default function HomePage() {
                   <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl">
                     <metric.icon className="h-6 w-6 text-white" />
                   </div>
-                  <span className="text-5xl font-bold text-gray-900">{metric.number}</span>
+                  <span className="text-5xl font-bold text-gray-800">{metric.number}</span>
                 </div>
-                <p className="text-gray-600 font-medium text-lg">{metric.label}</p>
+                <p className="text-gray-700 font-medium text-lg">{metric.label}</p>
               </div>
             ))}
           </motion.div>
@@ -861,10 +907,10 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="max-w-4xl mx-auto"
           >
-            <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Ready to accelerate your career?
             </h2>
-            <p className="text-xl md:text-2xl text-gray-700 mb-12">
+            <p className="text-xl md:text-2xl text-gray-100 mb-12">
               Join 50,000+ professionals who have transformed their careers with AI-powered insights.
             </p>
             
@@ -881,19 +927,40 @@ export default function HomePage() {
             </div>
 
             {/* Company Trust Logos */}
-            <div className="opacity-70">
-              <p className="text-gray-600 mb-8">Trusted by students at</p>
-              <div className="flex flex-wrap justify-center items-center gap-8">
-                {companyLogos.slice(0, 6).map((company, index) => (
+            <div className="opacity-90">
+              <p className="text-white mb-10 text-lg font-medium">Trusted by students at</p>
+              <div className="flex flex-wrap justify-center items-center gap-10">
+                {companyLogos.map((company, index) => (
                   <motion.div 
                     key={index}
-                    whileHover={{ scale: 1.1, opacity: 1 }}
-                    className="flex items-center space-x-2 hover:opacity-100 transition-all duration-300"
+                    whileHover={{ 
+                      scale: 1.15, 
+                      y: -4,
+                      transition: { type: "spring", stiffness: 300, damping: 15 }
+                    }}
+                    className="group cursor-pointer"
                   >
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${company.color} flex items-center justify-center text-white font-bold text-sm shadow-md`}>
-                      {company.logo}
-                    </div>
-                    <span className="text-sm font-medium text-gray-600">{company.name}</span>
+                    <motion.div 
+                      className={`${company.bgColor} w-16 h-16 rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center border border-gray-200/50 group-hover:border-gray-300/70 transition-all duration-300`}
+                      whileHover={{
+                        boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+                        background: "linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7))"
+                      }}
+                    >
+                      <motion.div
+                        className="text-gray-700 group-hover:text-gray-900 transition-colors duration-300"
+                        whileHover={{ scale: 1.1 }}
+                      >
+                        {company.logo}
+                      </motion.div>
+                    </motion.div>
+                    <motion.p 
+                      className="text-center mt-3 text-sm font-semibold text-white group-hover:text-gray-100 transition-colors duration-300"
+                      initial={{ opacity: 0.8 }}
+                      whileHover={{ opacity: 1 }}
+                    >
+                      {company.name}
+                    </motion.p>
                   </motion.div>
                 ))}
               </div>

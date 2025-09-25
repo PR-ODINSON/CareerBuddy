@@ -4,10 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 
 import { UsersService } from '../users/users.service';
-import { PrismaService } from '../prisma/prisma.service';
-import { RegisterDto } from './dto/register.dto';
+import { RegisterDto, UserRole } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -15,14 +13,13 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
-    private prisma: PrismaService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.usersService.findByEmailWithPassword(email);
     
     if (user && await bcrypt.compare(password, user.password)) {
-      const { password, ...result } = user;
+      const { password, ...result } = user.toObject();
       return result;
     }
     return null;
@@ -39,21 +36,29 @@ export class AuthService {
       throw new UnauthorizedException('Account is deactivated');
     }
 
+    // Update last login
+    await this.usersService.updateLastLogin(user._id);
+
     const payload = { 
       email: user.email, 
-      sub: user.id, 
+      sub: user._id, 
       role: user.role 
     };
 
     return {
       access_token: this.jwtService.sign(payload),
       user: {
-        id: user.id,
+        id: user._id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        isVerified: user.isVerified,
+        isVerified: user.emailVerified,
+        university: user.university,
+        major: user.major,
+        graduationYear: user.graduationYear,
+        currentYear: user.currentYear,
+        gpa: user.gpa,
       },
     };
   }
@@ -68,54 +73,46 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
+    // Create user data
+    const userData = {
+      email: registerDto.email,
+      password: hashedPassword,
+      firstName: registerDto.firstName,
+      lastName: registerDto.lastName,
+      role: registerDto.role || UserRole.STUDENT,
+      university: registerDto.university,
+      major: registerDto.major,
+      graduationYear: registerDto.graduationYear,
+      currentYear: registerDto.currentYear,
+      gpa: registerDto.gpa,
+      isActive: true,
+      emailVerified: false,
+    };
+
     // Create user
-    const user = await this.prisma.user.create({
-      data: {
-        email: registerDto.email,
-        password: hashedPassword,
-        firstName: registerDto.firstName,
-        lastName: registerDto.lastName,
-        role: registerDto.role || UserRole.STUDENT,
-        ...(registerDto.role === UserRole.STUDENT && {
-          studentProfile: {
-            create: {
-              university: registerDto.university,
-              major: registerDto.major,
-              graduationYear: registerDto.graduationYear,
-            },
-          },
-        }),
-        ...(registerDto.role === UserRole.COUNSELOR && {
-          counselorProfile: {
-            create: {
-              specialization: registerDto.specialization || [],
-              experience: registerDto.experience || 0,
-            },
-          },
-        }),
-      },
-      include: {
-        studentProfile: true,
-        counselorProfile: true,
-      },
-    });
+    const user = await this.usersService.create(userData);
 
     // Generate JWT token
     const payload = { 
       email: user.email, 
-      sub: user.id, 
+      sub: user._id, 
       role: user.role 
     };
 
     return {
       access_token: this.jwtService.sign(payload),
       user: {
-        id: user.id,
+        id: user._id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        isVerified: user.isVerified,
+        isVerified: user.emailVerified,
+        university: user.university,
+        major: user.major,
+        graduationYear: user.graduationYear,
+        currentYear: user.currentYear,
+        gpa: user.gpa,
       },
     };
   }
@@ -129,7 +126,7 @@ export class AuthService {
 
     const payload = { 
       email: user.email, 
-      sub: user.id, 
+      sub: user._id, 
       role: user.role 
     };
 

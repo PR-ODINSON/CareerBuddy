@@ -1,5 +1,10 @@
-import { IsEmail, IsNotEmpty, IsString, IsOptional, IsEnum, IsInt, IsArray, MinLength } from 'class-validator';
-import { UserRole } from '@prisma/client';
+import { IsEmail, IsNotEmpty, IsString, IsOptional, IsEnum, IsInt, IsNumber, MinLength, Min, Max } from 'class-validator';
+import { Transform } from 'class-transformer';
+
+export enum UserRole {
+  STUDENT = 'STUDENT',
+  ADMIN = 'ADMIN',
+}
 
 export class RegisterDto {
   @IsEmail()
@@ -20,27 +25,33 @@ export class RegisterDto {
 
   @IsEnum(UserRole)
   @IsOptional()
-  role?: UserRole;
+  role?: UserRole = UserRole.STUDENT;
 
-  // Student-specific fields
+  // Student-specific fields (required for students)
   @IsString()
-  @IsOptional()
-  university?: string;
+  @IsNotEmpty()
+  university: string;
 
   @IsString()
-  @IsOptional()
-  major?: string;
+  @IsNotEmpty()
+  major: string;
 
   @IsInt()
-  @IsOptional()
-  graduationYear?: number;
+  @IsNotEmpty()
+  graduationYear: number;
 
-  // Counselor-specific fields
-  @IsArray()
+  @IsString()
   @IsOptional()
-  specialization?: string[];
+  currentYear?: string;
 
-  @IsInt()
   @IsOptional()
-  experience?: number;
+  @Transform(({ value }) => {
+    if (value === '' || value === null || value === undefined) return undefined;
+    const num = parseFloat(value);
+    return isNaN(num) ? value : num;
+  })
+  @IsNumber({}, { message: 'GPA must be a valid number' })
+  @Min(0, { message: 'GPA must be at least 0' })
+  @Max(4.0, { message: 'GPA must not exceed 4.0' })
+  gpa?: number;
 }
