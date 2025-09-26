@@ -17,6 +17,52 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - careerbuddy_network
+
+  resume-analyzer:
+    build:
+      context: ./ai-services/resume-analyzer
+      dockerfile: Dockerfile
+    container_name: careerbuddy_resume_analyzer
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - PYTHONPATH=/app
+    volumes:
+      - ./ai-services/resume-analyzer:/app
+      - /app/__pycache__
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - careerbuddy_network
+
+  job-matcher:
+    build:
+      context: ./ai-services/job-matcher
+      dockerfile: Dockerfile
+    container_name: careerbuddy_job_matcher
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - PYTHONPATH=/app
+    volumes:
+      - ./ai-services/job-matcher:/app
+      - /app/__pycache__
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - careerbuddy_network
 
   backend:
     build:
@@ -30,13 +76,21 @@ services:
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - JWT_EXPIRES_IN=7d
       - FRONTEND_URL=http://localhost:3000
+      - AI_RESUME_ANALYZER_URL=http://resume-analyzer:8001
+      - AI_JOB_MATCHER_URL=http://job-matcher:8002
     volumes:
       - ./backend:/app
       - /app/node_modules
     depends_on:
       mongodb:
         condition: service_healthy
+      resume-analyzer:
+        condition: service_healthy
+      job-matcher:
+        condition: service_healthy
     command: npm run start:dev
+    networks:
+      - careerbuddy_network
 
   frontend:
     build:
@@ -54,6 +108,12 @@ services:
     depends_on:
       - backend
     command: npm run dev
+    networks:
+      - careerbuddy_network
 
 volumes:
   mongodb_data:
+
+networks:
+  careerbuddy_network:
+    driver: bridge

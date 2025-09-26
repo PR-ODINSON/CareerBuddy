@@ -3,6 +3,7 @@ import { Transform } from 'class-transformer';
 
 export enum UserRole {
   STUDENT = 'STUDENT',
+  COUNSELOR = 'COUNSELOR',
   ADMIN = 'ADMIN',
 }
 
@@ -39,10 +40,6 @@ export class RegisterDto {
   @IsInt()
   @IsNotEmpty()
   graduationYear: number;
-
-  @IsString()
-  @IsOptional()
-  currentYear?: string;
 
   @IsOptional()
   @Transform(({ value }) => {

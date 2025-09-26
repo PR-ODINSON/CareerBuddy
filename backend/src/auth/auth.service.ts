@@ -53,11 +53,10 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        isVerified: user.emailVerified,
+        isVerified: user.isVerified,
         university: user.university,
         major: user.major,
         graduationYear: user.graduationYear,
-        currentYear: user.currentYear,
         gpa: user.gpa,
       },
     };
@@ -83,10 +82,9 @@ export class AuthService {
       university: registerDto.university,
       major: registerDto.major,
       graduationYear: registerDto.graduationYear,
-      currentYear: registerDto.currentYear,
       gpa: registerDto.gpa,
       isActive: true,
-      emailVerified: false,
+      isVerified: false,
     };
 
     // Create user
@@ -107,11 +105,10 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        isVerified: user.emailVerified,
+        isVerified: user.isVerified,
         university: user.university,
         major: user.major,
         graduationYear: user.graduationYear,
-        currentYear: user.currentYear,
         gpa: user.gpa,
       },
     };

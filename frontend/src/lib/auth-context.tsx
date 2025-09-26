@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import { apiClient } from './api-client';
 
 interface User {
   id: string;
@@ -11,6 +11,19 @@ interface User {
   lastName: string;
   role: 'STUDENT' | 'COUNSELOR' | 'ADMIN';
   isVerified: boolean;
+  university?: string;
+  major?: string;
+  graduationYear?: number;
+  gpa?: number;
+  // Additional fields for different roles
+  specialization?: string[];
+  experience?: number;
+  certification?: string;
+  rating?: number;
+  targetRoles?: string[];
+  preferredIndustries?: string[];
+  locationPreferences?: string[];
+  salaryExpectation?: number;
 }
 
 interface AuthContextType {
@@ -19,19 +32,15 @@ interface AuthContextType {
   register: (userData: any) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  updateUser: (userData: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
-  // Configure axios defaults
-  axios.defaults.baseURL = API_URL;
 
   useEffect(() => {
     checkAuth();
@@ -41,13 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const token = localStorage.getItem('token');
       if (token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const response = await axios.get('/auth/profile');
-        setUser(response.data.user);
+        const userData = await apiClient.getProfile();
+        setUser(userData);
       }
     } catch (error) {
       localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
     } finally {
       setLoading(false);
     }
@@ -55,11 +62,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post('/auth/login', { email, password });
-      const { access_token, user } = response.data;
+      const response = await apiClient.login(email, password);
+      const { access_token, user } = response;
       
       localStorage.setItem('token', access_token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       setUser(user);
       
       // Redirect based on role
@@ -75,11 +81,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (userData: any) => {
     try {
-      const response = await axios.post('/auth/register', userData);
-      const { access_token, user } = response.data;
+      const response = await apiClient.register(userData);
+      const { access_token, user } = response;
       
       localStorage.setItem('token', access_token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       setUser(user);
       
       router.push('/dashboard');
@@ -88,15 +93,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUser = async (userData: any) => {
+    try {
+      const updatedUser = await apiClient.updateProfile(userData);
+      setUser(updatedUser);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Profile update failed');
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     router.push('/');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

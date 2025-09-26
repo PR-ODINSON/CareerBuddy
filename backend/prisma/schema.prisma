@@ -39,6 +39,10 @@ model User {
   counselingSessions CounselingSession[] @relation("SessionCounselor")
   createdJobs  Job[]               @relation("JobCreator")
   analytics    UserAnalytics[]
+  
+  // Counselor-Student assignments
+  counselorAssignments CounselorAssignment[] @relation("CounselorAssignments")
+  studentAssignments   CounselorAssignment[] @relation("StudentAssignments")
 
   @@map("users")
 }
@@ -300,6 +304,23 @@ model UserAnalytics {
   createdAt DateTime @default(now())
 
   @@map("user_analytics")
+}
+
+// Counselor-Student Assignment
+model CounselorAssignment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  counselorId String   @db.ObjectId
+  counselor   User     @relation("CounselorAssignments", fields: [counselorId], references: [id], onDelete: Cascade)
+  studentId   String   @db.ObjectId
+  student     User     @relation("StudentAssignments", fields: [studentId], references: [id], onDelete: Cascade)
+  
+  notes       String?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([counselorId, studentId])
+  @@map("counselor_assignments")
 }
 
 // Enums

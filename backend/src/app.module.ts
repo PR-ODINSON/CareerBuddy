@@ -7,11 +7,11 @@ import { join } from 'path';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-// TODO: Update these modules to use MongoDB instead of Prisma
-// import { ResumesModule } from './resumes/resumes.module';
-// import { JobsModule } from './jobs/jobs.module';
-// import { ApplicationsModule } from './applications/applications.module';
-// import { AdminModule } from './admin/admin.module';
+import { ResumesModule } from './resumes/resumes.module';
+import { JobsModule } from './jobs/jobs.module';
+import { ApplicationsModule } from './applications/applications.module';
+import { AdminModule } from './admin/admin.module';
+import { CounselorModule } from './counselor/counselor.module';
 
 // Controllers
 import { AppController } from './app.controller';
@@ -37,11 +37,11 @@ import { AppService } from './app.service';
     // Core modules
     AuthModule,
     UsersModule,
-    // TODO: Re-enable these modules after updating them to use MongoDB
-    // ResumesModule,
-    // JobsModule,
-    // ApplicationsModule,
-    // AdminModule,
+    ResumesModule,
+    JobsModule,
+    ApplicationsModule,
+    AdminModule,
+    CounselorModule,
   ],
   controllers: [AppController],
   providers: [AppService],
