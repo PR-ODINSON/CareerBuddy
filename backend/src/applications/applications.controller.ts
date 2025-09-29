@@ -18,8 +18,6 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
-import { CreateInterviewDto } from './dto/create-interview.dto';
-import { UpdateInterviewDto } from './dto/update-interview.dto';
 import { ApplicationStatus } from './schemas/application.schema';
 import { UserRole } from '../users/schemas/user.schema';
 
@@ -47,18 +45,15 @@ export class ApplicationsController {
     return this.applicationsService.getApplicationStats(userId);
   }
 
-  @Get('interviews/upcoming')
-  @ApiOperation({ summary: 'Get upcoming interviews' })
-  @ApiResponse({ status: 200, description: 'List of upcoming interviews' })
-  getUpcomingInterviews(@CurrentUser('id') userId: string) {
-    return this.applicationsService.getUpcomingInterviews(userId);
-  }
-
-  @Get('deadlines')
-  @ApiOperation({ summary: 'Get application deadlines' })
-  @ApiResponse({ status: 200, description: 'List of application deadlines' })
-  getDeadlines(@CurrentUser('id') userId: string) {
-    return this.applicationsService.getApplicationDeadlines(userId);
+  @Get(':id/timeline')
+  @ApiOperation({ summary: 'Get application timeline' })
+  @ApiResponse({ status: 200, description: 'Application timeline' })
+  getTimeline(
+    @Param('id') applicationId: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: UserRole
+  ) {
+    return this.applicationsService.getTimeline(applicationId, userId);
   }
 
   @Get(':id')
@@ -73,67 +68,59 @@ export class ApplicationsController {
   @ApiOperation({ summary: 'Apply for a job' })
   @ApiResponse({ status: 201, description: 'Application created successfully' })
   @ApiResponse({ status: 409, description: 'Already applied for this job' })
-  applyForJob(
+  create(
     @CurrentUser('id') userId: string,
     @Body() createApplicationDto: CreateApplicationDto
   ) {
-    return this.applicationsService.applyForJob(userId, createApplicationDto);
+    return this.applicationsService.create(userId, createApplicationDto);
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update application status' })
+  @ApiOperation({ summary: 'Update application' })
   @ApiResponse({ status: 200, description: 'Application updated successfully' })
   @ApiResponse({ status: 404, description: 'Application not found' })
-  updateApplication(
+  update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @Body() updateDto: UpdateApplicationDto
   ) {
-    return this.applicationsService.updateStatus(id, updateDto, userId);
+    return this.applicationsService.update(id, userId, updateDto);
+  }
+
+  @Put(':id/status')
+  @ApiOperation({ summary: 'Update application status' })
+  @ApiResponse({ status: 200, description: 'Application status updated' })
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.COUNSELOR)
+  updateStatus(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: UserRole,
+    @Body() statusData: { status: ApplicationStatus }
+  ) {
+    return this.applicationsService.updateStatus(id, statusData.status, userRole, userId);
   }
 
   @Put(':id/withdraw')
   @ApiOperation({ summary: 'Withdraw application' })
   @ApiResponse({ status: 200, description: 'Application withdrawn successfully' })
   @ApiResponse({ status: 404, description: 'Application not found' })
-  withdrawApplication(
+  withdraw(
     @Param('id') id: string,
     @CurrentUser('id') userId: string
   ) {
-    return this.applicationsService.withdrawApplication(id, userId);
+    return this.applicationsService.withdraw(id, userId);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete application' })
   @ApiResponse({ status: 200, description: 'Application deleted successfully' })
   @ApiResponse({ status: 404, description: 'Application not found' })
-  deleteApplication(
+  remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string
   ) {
-    return this.applicationsService.deleteApplication(id, userId);
+    return this.applicationsService.remove(id, userId);
   }
 
-  // Interview management endpoints
-  @Post('interviews')
-  @ApiOperation({ summary: 'Create interview (counselor/admin only)' })
-  @ApiResponse({ status: 201, description: 'Interview created successfully' })
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.COUNSELOR)
-  createInterview(@Body() createInterviewDto: CreateInterviewDto) {
-    return this.applicationsService.createInterview(createInterviewDto);
-  }
-
-  @Put('interviews/:id')
-  @ApiOperation({ summary: 'Update interview (counselor/admin only)' })
-  @ApiResponse({ status: 200, description: 'Interview updated successfully' })
-  @ApiResponse({ status: 404, description: 'Interview not found' })
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.COUNSELOR)
-  updateInterview(
-    @Param('id') id: string,
-    @Body() updateDto: UpdateInterviewDto
-  ) {
-    return this.applicationsService.updateInterview(id, updateDto);
-  }
 }

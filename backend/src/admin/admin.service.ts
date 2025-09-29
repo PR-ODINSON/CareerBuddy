@@ -1,12 +1,25 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { UserRole } from '@prisma/client';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User, UserDocument, UserRole } from '../users/schemas/user.schema';
+import { Job, JobDocument } from '../jobs/schemas/job.schema';
+import { Application, ApplicationDocument } from '../applications/schemas/application.schema';
+import { Resume, ResumeDocument } from '../resumes/schemas/resume.schema';
+import { CounselorAssignment, CounselorAssignmentDocument } from '../common/schemas/counselor-assignment.schema';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Job.name) private jobModel: Model<JobDocument>,
+    @InjectModel(Application.name) private applicationModel: Model<ApplicationDocument>,
+    @InjectModel(Resume.name) private resumeModel: Model<ResumeDocument>,
+    @InjectModel(CounselorAssignment.name) private assignmentModel: Model<CounselorAssignmentDocument>
+  ) {}
 
   async getDashboardStats() {
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
     const [
       totalUsers,
       activeUsers,
@@ -17,26 +30,22 @@ export class AdminService {
       totalApplications,
       totalResumes,
       recentUsers,
-      recentApplications,
+      recentApplications
     ] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.user.count({ where: { isActive: true } }),
-      this.prisma.user.count({ where: { role: UserRole.STUDENT } }),
-      this.prisma.user.count({ where: { role: UserRole.COUNSELOR } }),
-      this.prisma.job.count(),
-      this.prisma.job.count({ where: { isActive: true } }),
-      this.prisma.application.count(),
-      this.prisma.resume.count(),
-      this.prisma.user.count({
-        where: {
-          createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
-        }
+      this.userModel.countDocuments(),
+      this.userModel.countDocuments({ isActive: true }),
+      this.userModel.countDocuments({ role: UserRole.STUDENT }),
+      this.userModel.countDocuments({ role: UserRole.COUNSELOR }),
+      this.jobModel.countDocuments(),
+      this.jobModel.countDocuments({ isActive: true }),
+      this.applicationModel.countDocuments(),
+      this.resumeModel.countDocuments(),
+      this.userModel.countDocuments({
+        createdAt: { $gte: oneWeekAgo }
       }),
-      this.prisma.application.count({
-        where: {
-          appliedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
-        }
-      }),
+      this.applicationModel.countDocuments({
+        appliedAt: { $gte: oneWeekAgo }
+      })
     ]);
 
     return {
@@ -45,19 +54,19 @@ export class AdminService {
         active: activeUsers,
         students: totalStudents,
         counselors: totalCounselors,
-        newThisWeek: recentUsers,
+        newThisWeek: recentUsers
       },
       jobs: {
         total: totalJobs,
-        active: activeJobs,
+        active: activeJobs
       },
       applications: {
         total: totalApplications,
-        newThisWeek: recentApplications,
+        newThisWeek: recentApplications
       },
       resumes: {
-        total: totalResumes,
-      },
+        total: totalResumes
+      }
     };
   }
 
@@ -70,59 +79,45 @@ export class AdminService {
       usersByRole,
       topUniversities
     ] = await Promise.all([
-      this.prisma.user.count({
-        where: { createdAt: { gte: startDate } }
+      this.userModel.countDocuments({
+        createdAt: { $gte: startDate }
       }),
-      this.prisma.user.groupBy({
-        by: ['role'],
-        _count: true
-      }),
-      this.prisma.studentProfile.groupBy({
-        by: ['university'],
-        where: { university: { not: null } },
-        _count: true,
-        orderBy: { _count: { university: 'desc' } },
-        take: 10
-      })
+      this.userModel.aggregate([
+        { $group: { _id: '$role', count: { $sum: 1 } } }
+      ]),
+      this.userModel.aggregate([
+        { $match: { university: { $ne: null, $exists: true } } },
+        { $group: { _id: '$university', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 }
+      ])
     ]);
 
     return {
       period,
       recentRegistrations: recentUsers,
-      usersByRole: usersByRole.map(u => ({ role: u.role, count: u._count })),
-      topUniversities: topUniversities.map(u => ({ name: u.university, count: u._count }))
+      usersByRole: usersByRole.map(u => ({ role: u._id, count: u.count })),
+      topUniversities: topUniversities.map(u => ({ name: u._id, count: u.count }))
     };
   }
 
   async getAllUsers(page = 1, limit = 20, role?: UserRole) {
     const skip = (page - 1) * limit;
-    const where: any = {};
+    const filter: any = {};
     
     if (role) {
-      where.role = role;
+      filter.role = role;
     }
 
     const [users, total] = await Promise.all([
-      this.prisma.user.findMany({
-        where,
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          role: true,
-          isActive: true,
-          isVerified: true,
-          createdAt: true,
-          updatedAt: true,
-          studentProfile: true,
-          counselorProfile: true
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit
-      }),
-      this.prisma.user.count({ where }),
+      this.userModel
+        .find(filter)
+        .select('-password')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.userModel.countDocuments(filter)
     ]);
 
     return {
@@ -132,96 +127,94 @@ export class AdminService {
         totalPages: Math.ceil(total / limit),
         totalUsers: total,
         hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1,
-      },
+        hasPrev: page > 1
+      }
     };
   }
 
   async updateUserRole(userId: string, newRole: UserRole) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId }
-    });
+    const user = await this.userModel.findById(userId).lean();
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // Create profile if needed
-    if (newRole === UserRole.STUDENT && !user.studentProfile) {
-      await this.prisma.studentProfile.create({
-        data: { userId }
-      });
-    } else if (newRole === UserRole.COUNSELOR && !user.counselorProfile) {
-      await this.prisma.counselorProfile.create({
-        data: { userId }
-      });
+    // Update the user's role and add role-specific fields if needed
+    const updateData: any = { role: newRole };
+    
+    if (newRole === UserRole.COUNSELOR && !user.specialization) {
+      updateData.specialization = [];
+      updateData.experience = 0;
     }
 
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { role: newRole },
-      include: {
-        studentProfile: true,
-        counselorProfile: true
-      }
-    });
+    return await this.userModel
+      .findByIdAndUpdate(userId, updateData, { new: true })
+      .select('-password')
+      .lean();
   }
 
   async deactivateUser(userId: string) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { isActive: false }
-    });
+    return await this.userModel
+      .findByIdAndUpdate(userId, { isActive: false }, { new: true })
+      .select('-password')
+      .lean();
   }
 
   async activateUser(userId: string) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { isActive: true }
-    });
+    return await this.userModel
+      .findByIdAndUpdate(userId, { isActive: true }, { new: true })
+      .select('-password')
+      .lean();
   }
 
   async assignStudentToCounselor(counselorId: string, studentId: string, notes?: string) {
     // Check if assignment already exists
-    const existing = await this.prisma.counselorAssignment.findUnique({
-      where: {
-        counselorId_studentId: {
-          counselorId,
-          studentId
-        }
-      }
-    });
+    const existing = await this.assignmentModel
+      .findOne({ counselorId, studentId })
+      .lean();
 
     if (existing) {
       throw new BadRequestException('Assignment already exists');
     }
 
-    return this.prisma.counselorAssignment.create({
-      data: {
-        counselorId,
-        studentId,
-        notes
-      },
-      include: {
-        counselor: {
-          select: { firstName: true, lastName: true, email: true }
-        },
-        student: {
-          select: { firstName: true, lastName: true, email: true }
-        }
-      }
+    // Verify counselor and student exist
+    const [counselor, student] = await Promise.all([
+      this.userModel.findOne({ _id: counselorId, role: UserRole.COUNSELOR }).lean(),
+      this.userModel.findOne({ _id: studentId, role: UserRole.STUDENT }).lean()
+    ]);
+
+    if (!counselor) {
+      throw new NotFoundException('Counselor not found');
+    }
+
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    const assignment = await this.assignmentModel.create({
+      counselorId,
+      studentId,
+      notes
     });
+
+    return await this.assignmentModel
+      .findById(assignment._id)
+      .populate('counselorId', 'firstName lastName email')
+      .populate('studentId', 'firstName lastName email')
+      .lean();
   }
 
   async removeStudentAssignment(counselorId: string, studentId: string) {
-    return this.prisma.counselorAssignment.delete({
-      where: {
-        counselorId_studentId: {
-          counselorId,
-          studentId
-        }
-      }
-    });
+    const assignment = await this.assignmentModel
+      .findOne({ counselorId, studentId })
+      .lean();
+
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+
+    await this.assignmentModel.findByIdAndDelete(assignment._id);
+    return { message: 'Assignment removed successfully' };
   }
 
   private parsePeriod(period: string): number {

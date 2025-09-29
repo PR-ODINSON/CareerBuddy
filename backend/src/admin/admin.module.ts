@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+
+// Import schemas
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { Job, JobSchema } from '../jobs/schemas/job.schema';
 import { Application, ApplicationSchema } from '../applications/schemas/application.schema';
 import { Resume, ResumeSchema } from '../resumes/schemas/resume.schema';
-import { UserAnalytics, UserAnalyticsSchema } from '../common/schemas/analytics.schema';
+import { CounselorAssignment, CounselorAssignmentSchema } from '../common/schemas/counselor-assignment.schema';
 
 @Module({
   imports: [
@@ -16,8 +17,8 @@ import { UserAnalytics, UserAnalyticsSchema } from '../common/schemas/analytics.
       { name: Job.name, schema: JobSchema },
       { name: Application.name, schema: ApplicationSchema },
       { name: Resume.name, schema: ResumeSchema },
-      { name: UserAnalytics.name, schema: UserAnalyticsSchema },
-    ]),
+      { name: CounselorAssignment.name, schema: CounselorAssignmentSchema }
+    ])
   ],
   controllers: [AdminController],
   providers: [AdminService],

@@ -1,67 +1,85 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { UpdateFeedbackDto } from './dto/update-feedback.dto';
 import { AssignStudentDto } from './dto/assign-student.dto';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
-import { 
-  UserRole, 
-  FeedbackType, 
-  FeedbackSeverity, 
-  SessionStatus, 
-  ApplicationStatus 
-} from '@prisma/client';
+
+// Import schemas and enums
+import { User, UserDocument, UserRole } from '../users/schemas/user.schema';
+import { Resume, ResumeDocument } from '../resumes/schemas/resume.schema';
+import { ResumeFeedback, ResumeFeedbackDocument, FeedbackType, FeedbackSeverity } from '../resumes/schemas/resume.schema';
+import { Application, ApplicationDocument, ApplicationStatus } from '../applications/schemas/application.schema';
+import { Job, JobDocument } from '../jobs/schemas/job.schema';
+import { CounselingSession, CounselingSessionDocument, SessionStatus } from '../common/schemas/analytics.schema';
+import { CounselorAssignment, CounselorAssignmentDocument } from '../common/schemas/counselor-assignment.schema';
 
 @Injectable()
 export class CounselorService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Resume.name) private resumeModel: Model<ResumeDocument>,
+    @InjectModel(ResumeFeedback.name) private resumeFeedbackModel: Model<ResumeFeedbackDocument>,
+    @InjectModel(Application.name) private applicationModel: Model<ApplicationDocument>,
+    @InjectModel(Job.name) private jobModel: Model<JobDocument>,
+    @InjectModel(CounselingSession.name) private sessionModel: Model<CounselingSessionDocument>,
+    @InjectModel(CounselorAssignment.name) private assignmentModel: Model<CounselorAssignmentDocument>
+  ) {}
 
   // ====== STUDENT MANAGEMENT ======
 
   async getAssignedStudents(counselorId: string, page: number = 1, limit: number = 20) {
-    // First verify the user is a counselor
     await this.verifyCounselor(counselorId);
 
     const skip = (page - 1) * limit;
 
-    const assignments = await this.prisma.counselorAssignment.findMany({
-      where: { counselorId },
-      include: {
-        student: {
-          include: {
-            studentProfile: true,
-            resumes: {
-              where: { isActive: true },
-              take: 1,
-              orderBy: { updatedAt: 'desc' }
-            },
-            applications: {
-              take: 5,
-              orderBy: { appliedAt: 'desc' }
-            }
-          }
-        }
-      },
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' }
-    });
+    const assignments = await this.assignmentModel
+      .find({ counselorId })
+      .populate({
+        path: 'studentId',
+        select: 'firstName lastName email university major graduationYear gpa',
+      })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .lean();
 
-    const total = await this.prisma.counselorAssignment.count({
-      where: { counselorId }
-    });
+    const total = await this.assignmentModel.countDocuments({ counselorId });
+
+    const studentsWithData = await Promise.all(
+      assignments.map(async (assignment: any) => {
+        const resumes = await this.resumeModel
+          .find({ userId: assignment.studentId._id, isActive: true })
+          .sort({ updatedAt: -1 })
+          .limit(1)
+          .lean();
+
+        const applications = await this.applicationModel
+          .find({ userId: assignment.studentId._id })
+          .sort({ appliedAt: -1 })
+          .limit(5)
+          .lean();
+
+        return {
+          assignment: {
+            id: assignment._id,
+            assignedAt: assignment.createdAt,
+            notes: assignment.notes,
+            expiresAt: assignment.expiresAt
+          },
+          student: {
+            ...assignment.studentId,
+            resumes,
+            applications
+          }
+        };
+      })
+    );
 
     return {
-      students: assignments.map(assignment => ({
-        assignment: {
-          id: assignment.id,
-          assignedAt: assignment.createdAt,
-          notes: assignment.notes,
-          expiresAt: assignment.expiresAt
-        },
-        student: assignment.student
-      })),
+      students: studentsWithData,
       pagination: {
         page,
         limit,
@@ -74,42 +92,53 @@ export class CounselorService {
   async getStudentDetails(counselorId: string, studentId: string) {
     await this.verifyStudentAssignment(counselorId, studentId);
 
-    const student = await this.prisma.user.findUnique({
-      where: { id: studentId },
-      include: {
-        studentProfile: true,
-        resumes: {
-          orderBy: { updatedAt: 'desc' },
-          include: {
-            feedback: {
-              where: { counselorId },
-              orderBy: { createdAt: 'desc' }
-            }
-          }
-        },
-        applications: {
-          orderBy: { appliedAt: 'desc' },
-          include: {
-            job: true,
-            interviews: true
-          }
-        },
-        sessions: {
-          where: { counselorId },
-          orderBy: { scheduledAt: 'desc' }
-        }
-      }
-    });
+    const student = await this.userModel
+      .findById(studentId)
+      .select('-password')
+      .lean();
 
     if (!student) {
       throw new NotFoundException('Student not found');
     }
 
-    // Calculate student metrics
+    const [resumes, applications, sessions] = await Promise.all([
+      this.resumeModel
+        .find({ userId: studentId })
+        .sort({ updatedAt: -1 })
+        .lean(),
+      this.applicationModel
+        .find({ userId: studentId })
+        .populate('jobId')
+        .sort({ appliedAt: -1 })
+        .lean(),
+      this.sessionModel
+        .find({ studentId, counselorId })
+        .sort({ scheduledAt: -1 })
+        .lean()
+    ]);
+
+    // Get feedback for resumes
+    const resumeIds = resumes.map(r => r._id);
+    const feedback = await this.resumeFeedbackModel
+      .find({ resumeId: { $in: resumeIds }, counselorId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Attach feedback to resumes
+    const resumesWithFeedback = resumes.map(resume => ({
+      ...resume,
+      feedback: feedback.filter(f => f.resumeId.toString() === resume._id.toString())
+    }));
+
     const metrics = await this.calculateStudentMetrics(studentId);
 
     return {
-      student,
+      student: {
+        ...student,
+        resumes: resumesWithFeedback,
+        applications,
+        sessions
+      },
       metrics
     };
   }
@@ -117,42 +146,40 @@ export class CounselorService {
   async getStudentResumes(counselorId: string, studentId: string) {
     await this.verifyStudentAssignment(counselorId, studentId);
 
-    const resumes = await this.prisma.resume.findMany({
-      where: { userId: studentId },
-      include: {
-        feedback: {
-          where: { counselorId },
-          orderBy: { createdAt: 'desc' }
-        },
-        versions: {
-          orderBy: { version: 'desc' }
-        }
-      },
-      orderBy: { updatedAt: 'desc' }
-    });
+    const resumes = await this.resumeModel
+      .find({ userId: studentId })
+      .sort({ updatedAt: -1 })
+      .lean();
 
-    return resumes;
+    // Get feedback for each resume
+    const resumesWithFeedback = await Promise.all(
+      resumes.map(async (resume) => {
+        const feedback = await this.resumeFeedbackModel
+          .find({ resumeId: resume._id, counselorId })
+          .sort({ createdAt: -1 })
+          .lean();
+
+        return { ...resume, feedback };
+      })
+    );
+
+    return resumesWithFeedback;
   }
 
   async getStudentApplications(counselorId: string, studentId: string, status?: string) {
     await this.verifyStudentAssignment(counselorId, studentId);
 
-    const where: any = { userId: studentId };
+    const filter: any = { userId: studentId };
     if (status) {
-      where.status = status as ApplicationStatus;
+      filter.status = status;
     }
 
-    const applications = await this.prisma.application.findMany({
-      where,
-      include: {
-        job: true,
-        resume: true,
-        interviews: {
-          orderBy: { scheduledAt: 'asc' }
-        }
-      },
-      orderBy: { appliedAt: 'desc' }
-    });
+    const applications = await this.applicationModel
+      .find(filter)
+      .populate('jobId')
+      .populate('resumeId')
+      .sort({ appliedAt: -1 })
+      .lean();
 
     return applications;
   }
@@ -174,43 +201,31 @@ export class CounselorService {
   async createFeedback(counselorId: string, createFeedbackDto: CreateFeedbackDto) {
     const { resumeId, studentId, ...feedbackData } = createFeedbackDto;
 
-    // Verify resume exists and get student ID if not provided
-    const resume = await this.prisma.resume.findUnique({
-      where: { id: resumeId },
-      include: { user: true }
-    });
-
+    const resume = await this.resumeModel.findById(resumeId).lean();
     if (!resume) {
       throw new NotFoundException('Resume not found');
     }
 
     const actualStudentId = studentId || resume.userId;
-    await this.verifyStudentAssignment(counselorId, actualStudentId);
+    await this.verifyStudentAssignment(counselorId, actualStudentId.toString());
 
-    const feedback = await this.prisma.resumeFeedback.create({
-      data: {
-        ...feedbackData,
-        resumeId,
-        counselorId,
-        isAiGenerated: false
-      },
-      include: {
-        resume: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true
-              }
-            }
-          }
-        }
-      }
+    const feedback = await this.resumeFeedbackModel.create({
+      ...feedbackData,
+      resumeId,
+      counselorId,
+      isAiGenerated: false
     });
 
-    return feedback;
+    return await this.resumeFeedbackModel
+      .findById(feedback._id)
+      .populate({
+        path: 'resumeId',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName email'
+        }
+      })
+      .lean();
   }
 
   async getAllFeedback(
@@ -222,40 +237,38 @@ export class CounselorService {
     await this.verifyCounselor(counselorId);
 
     const skip = (page - 1) * limit;
-    const where: any = { counselorId };
+    const match: any = { counselorId };
 
     if (filters.resumeId) {
-      where.resumeId = filters.resumeId;
+      match.resumeId = filters.resumeId;
     }
 
+    let feedback;
     if (filters.studentId) {
-      where.resume = {
-        userId: filters.studentId
-      };
+      // Need to filter by student - use aggregation
+      const resumeIds = await this.resumeModel
+        .find({ userId: filters.studentId })
+        .select('_id')
+        .lean();
+
+      match.resumeId = { $in: resumeIds.map(r => r._id) };
     }
 
-    const feedback = await this.prisma.resumeFeedback.findMany({
-      where,
-      include: {
-        resume: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true
-              }
-            }
-          }
+    feedback = await this.resumeFeedbackModel
+      .find(match)
+      .populate({
+        path: 'resumeId',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName email'
         }
-      },
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' }
-    });
+      })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .lean();
 
-    const total = await this.prisma.resumeFeedback.count({ where });
+    const total = await this.resumeFeedbackModel.countDocuments(match);
 
     return {
       feedback,
@@ -269,25 +282,18 @@ export class CounselorService {
   }
 
   async getFeedback(counselorId: string, feedbackId: string) {
-    const feedback = await this.prisma.resumeFeedback.findUnique({
-      where: { id: feedbackId },
-      include: {
-        resume: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true
-              }
-            }
-          }
+    const feedback = await this.resumeFeedbackModel
+      .findById(feedbackId)
+      .populate({
+        path: 'resumeId',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName email'
         }
-      }
-    });
+      })
+      .lean();
 
-    if (!feedback || feedback.counselorId !== counselorId) {
+    if (!feedback || feedback.counselorId.toString() !== counselorId) {
       throw new NotFoundException('Feedback not found');
     }
 
@@ -295,47 +301,32 @@ export class CounselorService {
   }
 
   async updateFeedback(counselorId: string, feedbackId: string, updateFeedbackDto: UpdateFeedbackDto) {
-    const feedback = await this.prisma.resumeFeedback.findUnique({
-      where: { id: feedbackId }
-    });
+    const feedback = await this.resumeFeedbackModel.findById(feedbackId).lean();
 
-    if (!feedback || feedback.counselorId !== counselorId) {
+    if (!feedback || feedback.counselorId.toString() !== counselorId) {
       throw new NotFoundException('Feedback not found');
     }
 
-    return this.prisma.resumeFeedback.update({
-      where: { id: feedbackId },
-      data: updateFeedbackDto,
-      include: {
-        resume: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true
-              }
-            }
-          }
+    return await this.resumeFeedbackModel
+      .findByIdAndUpdate(feedbackId, updateFeedbackDto, { new: true })
+      .populate({
+        path: 'resumeId',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName email'
         }
-      }
-    });
+      })
+      .lean();
   }
 
   async deleteFeedback(counselorId: string, feedbackId: string) {
-    const feedback = await this.prisma.resumeFeedback.findUnique({
-      where: { id: feedbackId }
-    });
+    const feedback = await this.resumeFeedbackModel.findById(feedbackId).lean();
 
-    if (!feedback || feedback.counselorId !== counselorId) {
+    if (!feedback || feedback.counselorId.toString() !== counselorId) {
       throw new NotFoundException('Feedback not found');
     }
 
-    await this.prisma.resumeFeedback.delete({
-      where: { id: feedbackId }
-    });
-
+    await this.resumeFeedbackModel.findByIdAndDelete(feedbackId);
     return { message: 'Feedback deleted successfully' };
   }
 
@@ -344,33 +335,17 @@ export class CounselorService {
   async createSession(counselorId: string, createSessionDto: CreateSessionDto) {
     await this.verifyStudentAssignment(counselorId, createSessionDto.studentId);
 
-    const session = await this.prisma.counselingSession.create({
-      data: {
-        ...createSessionDto,
-        counselorId,
-        scheduledAt: new Date(createSessionDto.scheduledAt)
-      },
-      include: {
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true
-          }
-        },
-        counselor: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true
-          }
-        }
-      }
+    const session = await this.sessionModel.create({
+      ...createSessionDto,
+      counselorId,
+      scheduledAt: new Date(createSessionDto.scheduledAt)
     });
 
-    return session;
+    return await this.sessionModel
+      .findById(session._id)
+      .populate('studentId', 'firstName lastName email')
+      .populate('counselorId', 'firstName lastName email')
+      .lean();
   }
 
   async getAllSessions(
@@ -382,34 +357,25 @@ export class CounselorService {
     await this.verifyCounselor(counselorId);
 
     const skip = (page - 1) * limit;
-    const where: any = { counselorId };
+    const match: any = { counselorId };
 
     if (filters.status) {
-      where.status = filters.status as SessionStatus;
+      match.status = filters.status;
     }
 
     if (filters.studentId) {
-      where.studentId = filters.studentId;
+      match.studentId = filters.studentId;
     }
 
-    const sessions = await this.prisma.counselingSession.findMany({
-      where,
-      include: {
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true
-          }
-        }
-      },
-      skip,
-      take: limit,
-      orderBy: { scheduledAt: 'desc' }
-    });
+    const sessions = await this.sessionModel
+      .find(match)
+      .populate('studentId', 'firstName lastName email')
+      .skip(skip)
+      .limit(limit)
+      .sort({ scheduledAt: -1 })
+      .lean();
 
-    const total = await this.prisma.counselingSession.count({ where });
+    const total = await this.sessionModel.countDocuments(match);
 
     return {
       sessions,
@@ -423,30 +389,13 @@ export class CounselorService {
   }
 
   async getSession(counselorId: string, sessionId: string) {
-    const session = await this.prisma.counselingSession.findUnique({
-      where: { id: sessionId },
-      include: {
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            studentProfile: true
-          }
-        },
-        counselor: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true
-          }
-        }
-      }
-    });
+    const session = await this.sessionModel
+      .findById(sessionId)
+      .populate('studentId', 'firstName lastName email university major graduationYear gpa')
+      .populate('counselorId', 'firstName lastName email')
+      .lean();
 
-    if (!session || session.counselorId !== counselorId) {
+    if (!session || session.counselorId.toString() !== counselorId) {
       throw new NotFoundException('Session not found');
     }
 
@@ -454,79 +403,55 @@ export class CounselorService {
   }
 
   async updateSession(counselorId: string, sessionId: string, updateSessionDto: UpdateSessionDto) {
-    const session = await this.prisma.counselingSession.findUnique({
-      where: { id: sessionId }
-    });
+    const session = await this.sessionModel.findById(sessionId).lean();
 
-    if (!session || session.counselorId !== counselorId) {
+    if (!session || session.counselorId.toString() !== counselorId) {
       throw new NotFoundException('Session not found');
     }
 
-    return this.prisma.counselingSession.update({
-      where: { id: sessionId },
-      data: {
-        ...updateSessionDto,
-        scheduledAt: updateSessionDto.scheduledAt ? new Date(updateSessionDto.scheduledAt) : undefined
-      },
-      include: {
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true
-          }
-        }
-      }
-    });
+    const updateData: any = { ...updateSessionDto };
+    if (updateSessionDto.scheduledAt) {
+      updateData.scheduledAt = new Date(updateSessionDto.scheduledAt);
+    }
+
+    return await this.sessionModel
+      .findByIdAndUpdate(sessionId, updateData, { new: true })
+      .populate('studentId', 'firstName lastName email')
+      .lean();
   }
 
   async completeSession(
     counselorId: string,
     sessionId: string,
-    feedback: { notes?: string; feedback?: string; rating?: number }
+    sessionData: { notes?: string; feedback?: string; rating?: number }
   ) {
-    const session = await this.prisma.counselingSession.findUnique({
-      where: { id: sessionId }
-    });
+    const session = await this.sessionModel.findById(sessionId).lean();
 
-    if (!session || session.counselorId !== counselorId) {
+    if (!session || session.counselorId.toString() !== counselorId) {
       throw new NotFoundException('Session not found');
     }
 
-    return this.prisma.counselingSession.update({
-      where: { id: sessionId },
-      data: {
-        status: SessionStatus.COMPLETED,
-        ...feedback
-      },
-      include: {
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true
-          }
-        }
-      }
-    });
+    return await this.sessionModel
+      .findByIdAndUpdate(
+        sessionId,
+        {
+          status: SessionStatus.COMPLETED,
+          ...sessionData
+        },
+        { new: true }
+      )
+      .populate('studentId', 'firstName lastName email')
+      .lean();
   }
 
   async cancelSession(counselorId: string, sessionId: string) {
-    const session = await this.prisma.counselingSession.findUnique({
-      where: { id: sessionId }
-    });
+    const session = await this.sessionModel.findById(sessionId).lean();
 
-    if (!session || session.counselorId !== counselorId) {
+    if (!session || session.counselorId.toString() !== counselorId) {
       throw new NotFoundException('Session not found');
     }
 
-    await this.prisma.counselingSession.update({
-      where: { id: sessionId },
-      data: { status: SessionStatus.CANCELLED }
-    });
-
+    await this.sessionModel.findByIdAndUpdate(sessionId, { status: SessionStatus.CANCELLED });
     return { message: 'Session cancelled successfully' };
   }
 
@@ -541,55 +466,48 @@ export class CounselorService {
       upcomingSessions,
       pendingFeedback,
       completedSessions,
-      averageRating
+      avgRating
     ] = await Promise.all([
-      this.prisma.counselorAssignment.count({ where: { counselorId } }),
-      this.prisma.counselingSession.count({ where: { counselorId } }),
-      this.prisma.counselingSession.count({
-        where: {
-          counselorId,
-          status: SessionStatus.SCHEDULED,
-          scheduledAt: { gte: new Date() }
-        }
+      this.assignmentModel.countDocuments({ counselorId }),
+      this.sessionModel.countDocuments({ counselorId }),
+      this.sessionModel.countDocuments({
+        counselorId,
+        status: SessionStatus.SCHEDULED,
+        scheduledAt: { $gte: new Date() }
       }),
-      this.prisma.resumeFeedback.count({
-        where: { counselorId, isResolved: false }
+      this.resumeFeedbackModel.countDocuments({
+        counselorId,
+        isResolved: false
       }),
-      this.prisma.counselingSession.count({
-        where: { counselorId, status: SessionStatus.COMPLETED }
+      this.sessionModel.countDocuments({
+        counselorId,
+        status: SessionStatus.COMPLETED
       }),
-      this.prisma.counselingSession.aggregate({
-        where: { counselorId, rating: { not: null } },
-        _avg: { rating: true }
-      })
+      this.sessionModel.aggregate([
+        { $match: { counselorId, rating: { $ne: null } } },
+        { $group: { _id: null, avgRating: { $avg: '$rating' } } }
+      ])
     ]);
 
-    // Recent activity
-    const recentSessions = await this.prisma.counselingSession.findMany({
-      where: { counselorId },
-      include: {
-        student: {
-          select: { firstName: true, lastName: true }
-        }
-      },
-      orderBy: { updatedAt: 'desc' },
-      take: 5
-    });
+    const recentSessions = await this.sessionModel
+      .find({ counselorId })
+      .populate('studentId', 'firstName lastName')
+      .sort({ updatedAt: -1 })
+      .limit(5)
+      .lean();
 
-    const recentFeedback = await this.prisma.resumeFeedback.findMany({
-      where: { counselorId },
-      include: {
-        resume: {
-          include: {
-            user: {
-              select: { firstName: true, lastName: true }
-            }
-          }
+    const recentFeedback = await this.resumeFeedbackModel
+      .find({ counselorId })
+      .populate({
+        path: 'resumeId',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName'
         }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 5
-    });
+      })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
 
     return {
       stats: {
@@ -598,7 +516,7 @@ export class CounselorService {
         upcomingSessions,
         pendingFeedback,
         completedSessions,
-        averageRating: averageRating._avg.rating || 0
+        averageRating: avgRating[0]?.avgRating || 0
       },
       recentActivity: {
         sessions: recentSessions,
@@ -611,25 +529,21 @@ export class CounselorService {
     await this.verifyCounselor(counselorId);
 
     const timeFilter = this.getTimeFilter(timeframe);
-
-    // Get assigned students
-    const assignments = await this.prisma.counselorAssignment.findMany({
-      where: { counselorId },
-      include: { student: true }
-    });
+    const assignments = await this.assignmentModel
+      .find({ counselorId })
+      .populate('studentId', 'firstName lastName email')
+      .lean();
 
     const studentIds = assignments.map(a => a.studentId);
 
-    // Calculate performance metrics for each student
     const studentsPerformance = await Promise.all(
-      studentIds.map(async (studentId) => {
-        const student = assignments.find(a => a.studentId === studentId)?.student;
-        const metrics = await this.calculateStudentMetrics(studentId, timeFilter);
+      studentIds.map(async (student: any) => {
+        const metrics = await this.calculateStudentMetrics(student._id.toString(), timeFilter);
         return {
           student: {
-            id: student?.id,
-            name: `${student?.firstName} ${student?.lastName}`,
-            email: student?.email
+            id: student._id,
+            name: `${student.firstName} ${student.lastName}`,
+            email: student.email
           },
           metrics
         };
@@ -639,58 +553,28 @@ export class CounselorService {
     return studentsPerformance;
   }
 
-  async getResumeTrends(counselorId: string, timeframe: string = 'month') {
-    await this.verifyCounselor(counselorId);
-
-    const timeFilter = this.getTimeFilter(timeframe);
-    const studentIds = await this.getAssignedStudentIds(counselorId);
-
-    // Resume quality trends
-    const resumes = await this.prisma.resume.findMany({
-      where: {
-        userId: { in: studentIds },
-        createdAt: timeFilter
-      },
-      orderBy: { createdAt: 'asc' }
-    });
-
-    // Group by time periods and calculate average scores
-    const trends = this.groupByTimePeriod(resumes, timeframe, (resume) => {
-      // Calculate resume score based on content analysis
-      return this.calculateResumeScore(resume);
-    });
-
-    return trends;
-  }
-
   async getApplicationSuccess(counselorId: string, timeframe: string = 'month') {
     await this.verifyCounselor(counselorId);
 
     const timeFilter = this.getTimeFilter(timeframe);
     const studentIds = await this.getAssignedStudentIds(counselorId);
 
-    const applications = await this.prisma.application.findMany({
-      where: {
-        userId: { in: studentIds },
+    const applications = await this.applicationModel
+      .find({
+        userId: { $in: studentIds },
         appliedAt: timeFilter
-      },
-      include: {
-        job: true,
-        user: {
-          select: { firstName: true, lastName: true }
-        }
-      }
-    });
+      })
+      .populate('jobId')
+      .populate('userId', 'firstName lastName')
+      .lean();
 
-    // Calculate success rates
     const total = applications.length;
     const successful = applications.filter(app =>
-      [ApplicationStatus.OFFER, ApplicationStatus.INTERVIEW].includes(app.status)
+      app.status === ApplicationStatus.OFFER || app.status === ApplicationStatus.INTERVIEW
     ).length;
 
     const successRate = total > 0 ? (successful / total) * 100 : 0;
 
-    // Group by status
     const statusBreakdown = applications.reduce((acc, app) => {
       acc[app.status] = (acc[app.status] || 0) + 1;
       return acc;
@@ -701,35 +585,8 @@ export class CounselorService {
       total,
       successful,
       statusBreakdown,
-      applications: applications.slice(0, 20) // Recent applications
+      applications: applications.slice(0, 20)
     };
-  }
-
-  async getSkillsGapAnalysis(counselorId: string) {
-    await this.verifyCounselor(counselorId);
-
-    const studentIds = await this.getAssignedStudentIds(counselorId);
-
-    // Get all resumes for assigned students
-    const resumes = await this.prisma.resume.findMany({
-      where: { userId: { in: studentIds } },
-      select: { skills: true, userId: true }
-    });
-
-    // Get all job applications to see what skills are in demand
-    const applications = await this.prisma.application.findMany({
-      where: { userId: { in: studentIds } },
-      include: {
-        job: {
-          select: { skills: true, requirements: true }
-        }
-      }
-    });
-
-    // Analyze skills gaps
-    const skillsAnalysis = this.analyzeSkillsGaps(resumes, applications);
-
-    return skillsAnalysis;
   }
 
   // ====== ADMIN FUNCTIONS ======
@@ -737,14 +594,9 @@ export class CounselorService {
   async assignStudent(assignStudentDto: AssignStudentDto) {
     const { counselorId, studentId, notes, expiresAt } = assignStudentDto;
 
-    // Verify counselor and student exist
     const [counselor, student] = await Promise.all([
-      this.prisma.user.findUnique({
-        where: { id: counselorId, role: UserRole.COUNSELOR }
-      }),
-      this.prisma.user.findUnique({
-        where: { id: studentId, role: UserRole.STUDENT }
-      })
+      this.userModel.findOne({ _id: counselorId, role: UserRole.COUNSELOR }).lean(),
+      this.userModel.findOne({ _id: studentId, role: UserRole.STUDENT }).lean()
     ]);
 
     if (!counselor) {
@@ -755,96 +607,54 @@ export class CounselorService {
       throw new NotFoundException('Student not found');
     }
 
-    // Check if assignment already exists
-    const existingAssignment = await this.prisma.counselorAssignment.findUnique({
-      where: {
-        counselorId_studentId: {
-          counselorId,
-          studentId
-        }
-      }
-    });
+    const existingAssignment = await this.assignmentModel
+      .findOne({ counselorId, studentId })
+      .lean();
 
     if (existingAssignment) {
       throw new BadRequestException('Student is already assigned to this counselor');
     }
 
-    const assignment = await this.prisma.counselorAssignment.create({
-      data: {
-        counselorId,
-        studentId,
-        notes,
-        expiresAt: expiresAt ? new Date(expiresAt) : undefined
-      },
-      include: {
-        counselor: {
-          select: { firstName: true, lastName: true, email: true }
-        },
-        student: {
-          select: { firstName: true, lastName: true, email: true }
-        }
-      }
+    const assignment = await this.assignmentModel.create({
+      counselorId,
+      studentId,
+      notes,
+      expiresAt: expiresAt ? new Date(expiresAt) : undefined
     });
 
-    return assignment;
+    return await this.assignmentModel
+      .findById(assignment._id)
+      .populate('counselorId', 'firstName lastName email')
+      .populate('studentId', 'firstName lastName email')
+      .lean();
   }
 
   async removeStudentAssignment(counselorId: string, studentId: string) {
-    const assignment = await this.prisma.counselorAssignment.findUnique({
-      where: {
-        counselorId_studentId: {
-          counselorId,
-          studentId
-        }
-      }
-    });
+    const assignment = await this.assignmentModel
+      .findOne({ counselorId, studentId })
+      .lean();
 
     if (!assignment) {
       throw new NotFoundException('Assignment not found');
     }
 
-    await this.prisma.counselorAssignment.delete({
-      where: {
-        counselorId_studentId: {
-          counselorId,
-          studentId
-        }
-      }
-    });
-
+    await this.assignmentModel.findByIdAndDelete(assignment._id);
     return { message: 'Student assignment removed successfully' };
   }
 
   async getAllAssignments(page: number = 1, limit: number = 50) {
     const skip = (page - 1) * limit;
 
-    const assignments = await this.prisma.counselorAssignment.findMany({
-      include: {
-        counselor: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            counselorProfile: true
-          }
-        },
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            studentProfile: true
-          }
-        }
-      },
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' }
-    });
+    const assignments = await this.assignmentModel
+      .find()
+      .populate('counselorId', 'firstName lastName email specialization experience certification rating')
+      .populate('studentId', 'firstName lastName email university major graduationYear gpa')
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .lean();
 
-    const total = await this.prisma.counselorAssignment.count();
+    const total = await this.assignmentModel.countDocuments();
 
     return {
       assignments,
@@ -860,11 +670,9 @@ export class CounselorService {
   // ====== HELPER METHODS ======
 
   private async verifyCounselor(counselorId: string) {
-    const counselor = await this.prisma.user.findUnique({
-      where: { id: counselorId }
-    });
+    const counselor = await this.userModel.findById(counselorId).lean();
 
-    if (!counselor || ![UserRole.COUNSELOR, UserRole.ADMIN].includes(counselor.role)) {
+    if (!counselor || (counselor.role !== UserRole.COUNSELOR && counselor.role !== UserRole.ADMIN)) {
       throw new ForbiddenException('Access denied: Counselor role required');
     }
 
@@ -872,14 +680,9 @@ export class CounselorService {
   }
 
   private async verifyStudentAssignment(counselorId: string, studentId: string) {
-    const assignment = await this.prisma.counselorAssignment.findUnique({
-      where: {
-        counselorId_studentId: {
-          counselorId,
-          studentId
-        }
-      }
-    });
+    const assignment = await this.assignmentModel
+      .findOne({ counselorId, studentId })
+      .lean();
 
     if (!assignment) {
       throw new ForbiddenException('Student is not assigned to this counselor');
@@ -889,35 +692,31 @@ export class CounselorService {
   }
 
   private async getAssignedStudentIds(counselorId: string): Promise<string[]> {
-    const assignments = await this.prisma.counselorAssignment.findMany({
-      where: { counselorId },
-      select: { studentId: true }
-    });
+    const assignments = await this.assignmentModel
+      .find({ counselorId })
+      .select('studentId')
+      .lean();
 
-    return assignments.map(a => a.studentId);
+    return assignments.map(a => a.studentId.toString());
   }
 
   private async calculateStudentMetrics(studentId: string, timeFilter?: any) {
-    const where = timeFilter ? { userId: studentId, createdAt: timeFilter } : { userId: studentId };
+    const match = timeFilter ? { userId: studentId, createdAt: timeFilter } : { userId: studentId };
 
     const [resumeCount, applicationCount, sessionCount, averageResumeScore] = await Promise.all([
-      this.prisma.resume.count({ where }),
-      this.prisma.application.count({ where }),
-      this.prisma.counselingSession.count({
-        where: {
-          studentId,
-          ...(timeFilter && { createdAt: timeFilter })
-        }
+      this.resumeModel.countDocuments(match),
+      this.applicationModel.countDocuments(match),
+      this.sessionModel.countDocuments({
+        studentId,
+        ...(timeFilter && { createdAt: timeFilter })
       }),
       this.calculateAverageResumeScore(studentId, timeFilter)
     ]);
 
-    const successfulApplications = await this.prisma.application.count({
-      where: {
-        userId: studentId,
-        status: { in: [ApplicationStatus.OFFER, ApplicationStatus.INTERVIEW] },
-        ...(timeFilter && { appliedAt: timeFilter })
-      }
+    const successfulApplications = await this.applicationModel.countDocuments({
+      userId: studentId,
+      status: { $in: [ApplicationStatus.OFFER, ApplicationStatus.INTERVIEW] },
+      ...(timeFilter && { appliedAt: timeFilter })
     });
 
     const applicationSuccessRate = applicationCount > 0 ? (successfulApplications / applicationCount) * 100 : 0;
@@ -933,8 +732,6 @@ export class CounselorService {
   }
 
   private async calculateProgressTrends(studentId: string) {
-    // Implementation for calculating progress trends over time
-    // This would involve complex aggregations and time-series data
     return {
       resumeScoreTrend: [],
       applicationTrend: [],
@@ -943,12 +740,12 @@ export class CounselorService {
   }
 
   private async calculateAverageResumeScore(studentId: string, timeFilter?: any): Promise<number> {
-    const resumes = await this.prisma.resume.findMany({
-      where: {
-        userId: studentId,
-        ...(timeFilter && { createdAt: timeFilter })
-      }
-    });
+    const match: any = { userId: studentId };
+    if (timeFilter) {
+      match.createdAt = timeFilter;
+    }
+
+    const resumes = await this.resumeModel.find(match).lean();
 
     if (resumes.length === 0) return 0;
 
@@ -960,8 +757,7 @@ export class CounselorService {
   }
 
   private calculateResumeScore(resume: any): number {
-    // Simple scoring algorithm - can be enhanced with AI integration
-    let score = 50; // Base score
+    let score = 50;
 
     if (resume.skills && resume.skills.length > 5) score += 20;
     if (resume.experience) score += 20;
@@ -970,16 +766,50 @@ export class CounselorService {
     return Math.min(100, score);
   }
 
-  private getTimeFilter(timeframe: string) {
-    const now = new Date();
-    const filters: Record<string, Date> = {
-      week: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-      month: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
-      quarter: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
-      year: new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
-    };
+  async getResumeTrends(counselorId: string, timeframe: string = 'month') {
+    await this.verifyCounselor(counselorId);
 
-    return { gte: filters[timeframe] || filters.month };
+    const timeFilter = this.getTimeFilter(timeframe);
+    const studentIds = await this.getAssignedStudentIds(counselorId);
+
+    // Resume quality trends
+    const resumes = await this.resumeModel
+      .find({
+        userId: { $in: studentIds },
+        createdAt: timeFilter
+      })
+      .sort({ createdAt: 1 })
+      .lean();
+
+    // Group by time periods and calculate average scores
+    const trends = this.groupByTimePeriod(resumes, timeframe, (resume) => {
+      return this.calculateResumeScore(resume);
+    });
+
+    return trends;
+  }
+
+  async getSkillsGapAnalysis(counselorId: string) {
+    await this.verifyCounselor(counselorId);
+
+    const studentIds = await this.getAssignedStudentIds(counselorId);
+
+    // Get all resumes for assigned students
+    const resumes = await this.resumeModel
+      .find({ userId: { $in: studentIds } })
+      .select('skills userId')
+      .lean();
+
+    // Get all job applications to see what skills are in demand
+    const applications = await this.applicationModel
+      .find({ userId: { $in: studentIds } })
+      .populate('jobId', 'skills requirements')
+      .lean();
+
+    // Analyze skills gaps
+    const skillsAnalysis = this.analyzeSkillsGaps(resumes, applications);
+
+    return skillsAnalysis;
   }
 
   private groupByTimePeriod<T>(
@@ -1004,8 +834,8 @@ export class CounselorService {
     // Extract all required job skills
     const jobSkills = new Set<string>();
     applications.forEach(app => {
-      if (app.job.skills) {
-        app.job.skills.forEach((skill: string) => jobSkills.add(skill.toLowerCase()));
+      if (app.jobId && app.jobId.skills) {
+        app.jobId.skills.forEach((skill: string) => jobSkills.add(skill.toLowerCase()));
       }
     });
 
@@ -1030,5 +860,17 @@ export class CounselorService {
       priority: 'high',
       resources: [`Learn ${skill} online`, `Practice ${skill} projects`]
     }));
+  }
+
+  private getTimeFilter(timeframe: string) {
+    const now = new Date();
+    const filters: Record<string, Date> = {
+      week: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      month: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+      quarter: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
+      year: new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+    };
+
+    return { $gte: filters[timeframe] || filters.month };
   }
 }

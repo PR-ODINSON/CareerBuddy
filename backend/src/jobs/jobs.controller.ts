@@ -19,7 +19,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { SearchJobsDto } from './dto/search-jobs.dto';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../users/schemas/user.schema';
 
 @ApiTags('jobs')
 @Controller('jobs')
@@ -45,7 +45,7 @@ export class JobsController {
   @ApiResponse({ status: 200, description: 'Search results with pagination' })
   searchJobs(@Query() searchDto: SearchJobsDto) {
     const { page = 1, limit = 20, ...filters } = searchDto;
-    return this.jobsService.searchJobs(filters as SearchJobsDto, page, limit);
+    return this.jobsService.search(searchDto);
   }
 
   @Get('recommendations')
@@ -97,9 +97,10 @@ export class JobsController {
   update(
     @Param('id') id: string,
     @Body() updateJobDto: UpdateJobDto,
-    @CurrentUser('id') userId: string
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: UserRole
   ) {
-    return this.jobsService.update(id, updateJobDto, userId);
+    return this.jobsService.update(id, updateJobDto, userId, userRole);
   }
 
   @Delete(':id')
@@ -110,8 +111,9 @@ export class JobsController {
   @Roles(UserRole.ADMIN, UserRole.COUNSELOR)
   delete(
     @Param('id') id: string,
-    @CurrentUser('id') userId: string
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: UserRole
   ) {
-    return this.jobsService.delete(id, userId);
+    return this.jobsService.delete(id, userId, userRole);
   }
 }

@@ -29,20 +29,14 @@ export class AdminController {
     return this.adminService.getUserAnalytics(period);
   }
 
-  @Get('analytics/resumes')
-  @ApiOperation({ summary: 'Get resume analytics' })
-  @ApiResponse({ status: 200, description: 'Resume analytics data' })
-  @ApiQuery({ name: 'period', required: false, description: 'Time period' })
-  getResumeAnalytics(@Query('period') period: string = '30d') {
-    return this.adminService.getResumeAnalytics(period);
-  }
-
-  @Get('analytics/jobs')
-  @ApiOperation({ summary: 'Get job analytics' })
-  @ApiResponse({ status: 200, description: 'Job analytics data' })
-  @ApiQuery({ name: 'period', required: false, description: 'Time period' })
-  getJobAnalytics(@Query('period') period: string = '30d') {
-    return this.adminService.getJobAnalytics(period);
+  @Get('users/:id/role')
+  @ApiOperation({ summary: 'Update user role' })
+  @ApiResponse({ status: 200, description: 'User role updated' })
+  updateUserRole(
+    @Param('id') userId: string,
+    @Body() roleData: { role: UserRole }
+  ) {
+    return this.adminService.updateUserRole(userId, roleData.role);
   }
 
   @Get('users')
@@ -59,21 +53,17 @@ export class AdminController {
     return this.adminService.getAllUsers(page, limit, role);
   }
 
-  @Get('users/:id/activity')
-  @ApiOperation({ summary: 'Get user activity details' })
-  @ApiResponse({ status: 200, description: 'User activity data' })
-  getUserActivity(@Param('id') userId: string) {
-    return this.adminService.getUserActivity(userId);
+  @Put('users/:id/deactivate')
+  @ApiOperation({ summary: 'Deactivate user' })
+  @ApiResponse({ status: 200, description: 'User deactivated' })
+  deactivateUser(@Param('id') userId: string) {
+    return this.adminService.deactivateUser(userId);
   }
 
-  @Put('jobs/:id/moderate')
-  @ApiOperation({ summary: 'Moderate job posting' })
-  @ApiResponse({ status: 200, description: 'Job moderation completed' })
-  @ApiResponse({ status: 404, description: 'Job not found' })
-  moderateJob(
-    @Param('id') jobId: string,
-    @Body() moderationData: { action: 'approve' | 'reject'; reason?: string }
-  ) {
-    return this.adminService.moderateJob(jobId, moderationData.action, moderationData.reason);
+  @Put('users/:id/activate')
+  @ApiOperation({ summary: 'Activate user' })
+  @ApiResponse({ status: 200, description: 'User activated' })
+  activateUser(@Param('id') userId: string) {
+    return this.adminService.activateUser(userId);
   }
 }

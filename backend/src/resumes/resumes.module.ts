@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-
 import { ResumesController } from './resumes.controller';
 import { ResumesService } from './resumes.service';
 import { Resume, ResumeSchema } from './schemas/resume.schema';
@@ -13,9 +12,9 @@ import { AiIntegrationModule } from '../ai-integration/ai-integration.module';
     MongooseModule.forFeature([
       { name: Resume.name, schema: ResumeSchema },
       { name: ResumeFeedback.name, schema: ResumeFeedbackSchema },
-      { name: ResumeVersion.name, schema: ResumeVersionSchema },
+      { name: ResumeVersion.name, schema: ResumeVersionSchema }
     ]),
-    AiIntegrationModule,
+    AiIntegrationModule
   ],
   controllers: [ResumesController],
   providers: [ResumesService],

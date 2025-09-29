@@ -59,7 +59,7 @@ export class ResumesController {
       }),
     ) file: Express.Multer.File,
   ) {
-    return this.resumesService.uploadResume(userId, file);
+    return this.resumesService.create(userId, file);
   }
 
   @Post(':id/analyze')
@@ -67,7 +67,7 @@ export class ResumesController {
   @ApiResponse({ status: 200, description: 'Resume analysis completed' })
   @ApiResponse({ status: 404, description: 'Resume not found' })
   analyzeResume(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    return this.resumesService.analyzeResume(id, userId);
+    return this.resumesService.analyze(id, userId);
   }
 
   @Put(':id/set-active')
@@ -75,7 +75,7 @@ export class ResumesController {
   @ApiResponse({ status: 200, description: 'Resume set as active' })
   @ApiResponse({ status: 404, description: 'Resume not found' })
   setActiveResume(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    return this.resumesService.setActiveResume(userId, id);
+    return this.resumesService.update(id, userId, { isActive: true });
   }
 
   @Delete(':id')
@@ -83,6 +83,6 @@ export class ResumesController {
   @ApiResponse({ status: 200, description: 'Resume deleted successfully' })
   @ApiResponse({ status: 404, description: 'Resume not found' })
   deleteResume(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    return this.resumesService.deleteResume(id, userId);
+    return this.resumesService.remove(id, userId);
   }
 }

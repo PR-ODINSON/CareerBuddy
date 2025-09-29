@@ -172,32 +172,4 @@ export class JobsService {
       }
     };
   }
-
-  // Add missing methods for controller compatibility
-  async getRecommendations(userId: string, limit: number = 10) {
-    // Simple recommendation based on recent jobs
-    return this.jobModel
-      .find({ isActive: true })
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .lean();
-  }
-
-  async getJobStats() {
-    const [total, active] = await Promise.all([
-      this.jobModel.countDocuments(),
-      this.jobModel.countDocuments({ isActive: true })
-    ]);
-
-    return {
-      total,
-      active,
-      inactive: total - active
-    };
-  }
-
-  // Alias for remove method
-  async delete(id: string, userId: string, userRole: UserRole) {
-    return this.remove(id, userId, userRole);
-  }
 }
