@@ -66,14 +66,17 @@ export default function StudentDetailsPage() {
         role: 'STUDENT',
       };
 
+      // Remove currentYear as it's not part of the backend schema
+      const { currentYear, ...dataToSend } = registrationData;
+      
       // Remove undefined values to avoid validation issues
-      Object.keys(registrationData).forEach(key => {
-        if (registrationData[key] === undefined || registrationData[key] === '') {
-          delete registrationData[key];
+      Object.keys(dataToSend).forEach(key => {
+        if (dataToSend[key] === undefined || dataToSend[key] === '') {
+          delete dataToSend[key];
         }
       });
 
-      await register(registrationData);
+      await register(dataToSend);
       
       // Clear stored data
       localStorage.removeItem('registrationPersonalDetails');
