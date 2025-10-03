@@ -185,7 +185,7 @@ export default function PrivacyPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-800 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-800 relative overflow-hidden font-inter">
       {/* Background Elements */}
       <motion.div 
         className="absolute inset-0 opacity-40"

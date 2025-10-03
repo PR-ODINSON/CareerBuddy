@@ -83,7 +83,7 @@
   }
   
   .font-heading {
-    font-family: var(--font-poppins);
+    font-family: var(--font-inter);
     font-weight: 600;
     letter-spacing: -0.02em;
   }

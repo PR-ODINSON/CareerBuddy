@@ -41,7 +41,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${poppins.variable} ${jetbrainsMono.variable} font-poppins antialiased`}>
+      <body className={`${inter.variable} ${poppins.variable} ${jetbrainsMono.variable} font-inter antialiased`}>
         <QueryProvider>
           <AuthProvider>
             {children}

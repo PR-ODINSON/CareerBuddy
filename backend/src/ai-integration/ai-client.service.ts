@@ -1,6 +1,7 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
+import { BuiltInAiService } from './built-in-ai.service';
 
 export interface ResumeAnalysisResult {
   parsed_data: {
@@ -69,7 +70,10 @@ export class AiClientService {
   private readonly resumeAnalyzerClient: AxiosInstance;
   private readonly jobMatcherClient: AxiosInstance;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private builtInAiService: BuiltInAiService
+  ) {
     const resumeAnalyzerUrl = this.configService.get<string>(
       'AI_RESUME_ANALYZER_URL',
       'http://localhost:8001'
@@ -102,37 +106,46 @@ export class AiClientService {
 
   async analyzeResumeFile(fileBuffer: Buffer, fileName: string): Promise<ResumeAnalysisResult> {
     try {
-      // For now, return a mock response since file upload to AI service needs different implementation
-      const mockResponse: ResumeAnalysisResult = {
+      // Use built-in AI service instead of microservice
+      const builtInResult = await this.builtInAiService.analyzeResumeFile(fileBuffer, fileName);
+      
+      // Convert built-in result to expected format
+      const result: ResumeAnalysisResult = {
         parsed_data: {
-          contact_info: {},
-          summary: '',
-          experience: [],
-          education: [],
-          skills: [],
+          contact_info: builtInResult.sections.contact ? { available: true } : {},
+          summary: builtInResult.sections.summary ? 'Summary section detected' : '',
+          experience: builtInResult.experience_years > 0 ? [`${builtInResult.experience_years} years experience`] : [],
+          education: builtInResult.sections.education ? ['Education section detected'] : [],
+          skills: builtInResult.skills,
           achievements: [],
-          keywords: []
+          keywords: Object.keys(builtInResult.keyword_density)
         },
         ats_score: {
-          overall_score: 75,
-          formatting_score: 80,
-          content_score: 70,
-          keyword_score: 75
+          overall_score: builtInResult.ats_score,
+          formatting_score: builtInResult.sections.contact && builtInResult.sections.summary ? 85 : 60,
+          content_score: builtInResult.skills.length > 5 ? 80 : 60,
+          keyword_score: Math.min(builtInResult.skills.length * 10, 100)
         },
-        feedback: [
-          {
+        feedback: builtInResult.feedback.improvements.map(improvement => ({
+          type: 'improvement',
+          category: 'content',
+          title: improvement,
+          description: improvement,
+          severity: 'medium'
+        })).concat(
+          builtInResult.feedback.suggestions.map(suggestion => ({
             type: 'suggestion',
-            category: 'content',
-            title: 'Add more quantified achievements',
-            description: 'Include specific numbers and metrics in your accomplishments',
-            severity: 'medium'
-          }
-        ],
-        overall_score: 75
+            category: 'optimization',
+            title: suggestion,
+            description: suggestion,
+            severity: 'low'
+          }))
+        ),
+        overall_score: builtInResult.ats_score
       };
 
-      this.logger.log(`Resume analysis completed for file: ${fileName}`);
-      return mockResponse;
+      this.logger.log(`Resume analysis completed for file: ${fileName} (Built-in AI)`);
+      return result;
     } catch (error) {
       this.logger.error(`Resume analysis failed for file: ${fileName}`, error);
       throw new BadRequestException('Resume analysis failed. Please try again.');
@@ -141,12 +154,46 @@ export class AiClientService {
 
   async analyzeResumeText(content: string): Promise<ResumeAnalysisResult> {
     try {
-      const response = await this.resumeAnalyzerClient.post('/analyze/text', {
-        content,
-      });
+      // Use built-in AI service instead of microservice
+      const builtInResult = await this.builtInAiService.analyzeResumeText(content);
+      
+      // Convert built-in result to expected format (same as analyzeResumeFile)
+      const result: ResumeAnalysisResult = {
+        parsed_data: {
+          contact_info: builtInResult.sections.contact ? { available: true } : {},
+          summary: builtInResult.sections.summary ? 'Summary section detected' : '',
+          experience: builtInResult.experience_years > 0 ? [`${builtInResult.experience_years} years experience`] : [],
+          education: builtInResult.sections.education ? ['Education section detected'] : [],
+          skills: builtInResult.skills,
+          achievements: [],
+          keywords: Object.keys(builtInResult.keyword_density)
+        },
+        ats_score: {
+          overall_score: builtInResult.ats_score,
+          formatting_score: builtInResult.sections.contact && builtInResult.sections.summary ? 85 : 60,
+          content_score: builtInResult.skills.length > 5 ? 80 : 60,
+          keyword_score: Math.min(builtInResult.skills.length * 10, 100)
+        },
+        feedback: builtInResult.feedback.improvements.map(improvement => ({
+          type: 'improvement',
+          category: 'content',
+          title: improvement,
+          description: improvement,
+          severity: 'medium'
+        })).concat(
+          builtInResult.feedback.suggestions.map(suggestion => ({
+            type: 'suggestion',
+            category: 'optimization',
+            title: suggestion,
+            description: suggestion,
+            severity: 'low'
+          }))
+        ),
+        overall_score: builtInResult.ats_score
+      };
 
-      this.logger.log('Resume text analysis completed');
-      return response.data;
+      this.logger.log('Resume text analysis completed (Built-in AI)');
+      return result;
     } catch (error) {
       this.logger.error('Resume text analysis failed', error);
       throw new BadRequestException('Resume analysis failed. Please try again.');

@@ -28,7 +28,7 @@ A comprehensive platform that helps students build, optimize, and manage their r
 ### Tech Stack
 - **Frontend**: Next.js 14 + TypeScript + TailwindCSS + shadcn/ui
 - **Backend**: NestJS + TypeScript + MongoDB + Mongoose
-- **AI Services**: Python FastAPI + spaCy + scikit-learn + NLTK
+- **AI Services**: Built-in NestJS services with PDF parsing and text analysis
 - **Database**: MongoDB 7.0+
 - **Authentication**: JWT + Role-based access control
 - **Container**: Docker + Docker Compose
@@ -38,9 +38,7 @@ A comprehensive platform that helps students build, optimize, and manage their r
 careerbuddy/
 ├── frontend/                 # Next.js application (Port 3000)
 ├── backend/                 # NestJS API server (Port 3001)
-├── ai-services/
-│   ├── resume-analyzer/     # Python FastAPI (Port 8001)
-│   └── job-matcher/         # Python FastAPI (Port 8002)
+│   └── ai-integration/      # Built-in AI services
 ├── docker-compose.yml       # Multi-service orchestration
 └── DEPLOYMENT.md           # Comprehensive deployment guide
 ```
@@ -48,9 +46,10 @@ careerbuddy/
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Docker and Docker Compose
-- At least 8GB RAM (recommended 16GB)
-- 10GB free disk space
+- Node.js 18+ and npm
+- MongoDB 7.0+
+- At least 4GB RAM (recommended 8GB)
+- 5GB free disk space
 
 ### 1. Clone and Setup
 ```bash
@@ -59,17 +58,30 @@ cd careerbuddy
 cp env.example .env
 ```
 
-### 2. Start All Services
+### 2. Install Dependencies
 ```bash
-docker-compose up -d
+# Install backend dependencies
+cd backend
+npm install
+
+# Install frontend dependencies
+cd ../frontend
+npm install
 ```
 
-### 3. Access the Application
+### 3. Start Services
+```bash
+# Start backend (from backend directory)
+npm start
+
+# Start frontend (from frontend directory)
+npm run dev
+```
+
+### 4. Access the Application
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:3001/api
 - **API Documentation**: http://localhost:3001/api/docs
-- **Resume Analyzer**: http://localhost:8001
-- **Job Matcher**: http://localhost:8002
 
 ## 📚 API Documentation
 
