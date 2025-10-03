@@ -43,10 +43,10 @@ feedback_generator = FeedbackGenerator()
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup"""
-    print("🚀 Resume Analyzer service starting up...")
+    print("Resume Analyzer service starting up...")
     await resume_parser.initialize()
     await ats_analyzer.initialize()
-    print("✅ Resume Analyzer service ready!")
+    print("Resume Analyzer service ready!")
 
 @app.get("/")
 async def root():

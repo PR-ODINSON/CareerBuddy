@@ -14,7 +14,7 @@ import { UserRole } from '../users/schemas/user.schema';
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
-  @Get('dashboard')
+  @Get('dashboard-stats')
   @ApiOperation({ summary: 'Get admin dashboard statistics' })
   @ApiResponse({ status: 200, description: 'Dashboard statistics' })
   getDashboardStats() {
@@ -29,7 +29,7 @@ export class AdminController {
     return this.adminService.getUserAnalytics(period);
   }
 
-  @Get('users/:id/role')
+  @Put('users/:id/role')
   @ApiOperation({ summary: 'Update user role' })
   @ApiResponse({ status: 200, description: 'User role updated' })
   updateUserRole(

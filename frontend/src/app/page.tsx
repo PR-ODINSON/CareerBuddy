@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
 import { 
   GraduationCap, 
@@ -71,8 +71,13 @@ const tiltVariants = {
 export default function HomePage() {
   const [activeSection, setActiveSection] = useState('hero');
   const heroRef = useRef(null);
+  const howItWorksRef = useRef(null);
   const featuresRef = useRef(null);
   const testimonialsRef = useRef(null);
+  const shouldReduceMotion = useReducedMotion();
+  const [showDemo, setShowDemo] = useState(false);
+  const [demoPhase, setDemoPhase] = useState<'idle' | 'analyzing' | 'scoring' | 'done'>('idle');
+  const [demoScore, setDemoScore] = useState<number | null>(null);
   
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
@@ -101,6 +106,7 @@ export default function HomePage() {
     const handleScroll = () => {
       const sections = [
         { id: 'hero', ref: heroRef },
+        { id: 'how-it-works', ref: howItWorksRef },
         { id: 'features', ref: featuresRef },
         { id: 'testimonials', ref: testimonialsRef }
       ];
@@ -123,6 +129,23 @@ export default function HomePage() {
     handleScroll(); // Call once to set initial state
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Demo modal simulation
+  useEffect(() => {
+    if (showDemo) {
+      setDemoPhase('analyzing');
+      const t1 = setTimeout(() => setDemoPhase('scoring'), 1200);
+      const t2 = setTimeout(() => {
+        setDemoPhase('done');
+        const score = Math.floor(82 + Math.random() * 14);
+        setDemoScore(score);
+      }, 3000);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    } else {
+      setDemoPhase('idle');
+      setDemoScore(null);
+    }
+  }, [showDemo]);
 
   const features = [
     {
@@ -287,7 +310,7 @@ export default function HomePage() {
         {/* Morphing gradient blobs */}
         <motion.div 
           className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-r from-blue-500/30 to-cyan-500/30 rounded-full blur-3xl"
-          animate={{
+          animate={shouldReduceMotion ? undefined : {
             scale: [1, 1.2, 1],
             rotate: [0, 180, 360],
             borderRadius: ["50%", "40%", "50%"]
@@ -300,7 +323,7 @@ export default function HomePage() {
         />
         <motion.div 
           className="absolute top-40 right-40 w-80 h-80 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full blur-3xl"
-          animate={{
+          animate={shouldReduceMotion ? undefined : {
             scale: [1, 0.8, 1.1, 1],
             rotate: [360, 180, 0],
             borderRadius: ["50%", "60%", "40%", "50%"]
@@ -314,7 +337,7 @@ export default function HomePage() {
         />
         <motion.div 
           className="absolute bottom-40 left-1/3 w-72 h-72 bg-gradient-to-r from-teal-500/30 to-green-500/30 rounded-full blur-3xl"
-          animate={{
+          animate={shouldReduceMotion ? undefined : {
             scale: [1, 1.3, 0.9, 1],
             rotate: [0, -180, -360],
             borderRadius: ["50%", "30%", "60%", "50%"]
@@ -336,7 +359,7 @@ export default function HomePage() {
               left: `${20 + i * 15}%`,
               top: `${30 + i * 10}%`,
             }}
-            animate={{
+            animate={shouldReduceMotion ? undefined : {
               y: [-20, -40, -20],
               opacity: [0.3, 0.8, 0.3],
             }}
@@ -391,6 +414,7 @@ export default function HomePage() {
           <div className="flex items-center space-x-6">
             <nav className="hidden md:flex items-center space-x-8">
               {[
+                { href: "#how-it-works", label: "How it works", id: "how-it-works" },
                 { href: "#features", label: "Features", id: "features" },
                 { href: "#testimonials", label: "Success Stories", id: "testimonials" }
               ].map((item, index) => (
@@ -662,7 +686,7 @@ export default function HomePage() {
                 <div className="relative overflow-hidden">
                   <motion.div
                     className="flex space-x-8"
-                    animate={{ x: [0, -1200] }}
+                    animate={shouldReduceMotion ? undefined : { x: [0, -1200] }}
                     transition={{ duration: 20, repeat: Infinity, ease: "linear", repeatType: "loop" }}
                   >
                     {[...companyLogos, ...companyLogos, ...companyLogos].map((company, index) => (
@@ -696,8 +720,73 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* How it works Section */}
+      <section ref={howItWorksRef} id="how-it-works" className="relative py-24">
+        <div className="container mx-auto px-6">
+          <motion.div 
+            initial={{ y: 40, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <h2 className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">How it works</h2>
+            <p className="text-xl text-gray-200 max-w-3xl mx-auto font-light">Three simple steps to accelerate your job search with AI.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-stretch">
+            <motion.div 
+              initial={{ y: 30, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} transition={{ duration: 0.6 }} viewport={{ once: true }}
+              className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20"
+            >
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl"><FileText className="h-5 w-5 text-white" /></div>
+                <span className="text-white font-semibold">Step 1</span>
+              </div>
+              <h3 className="text-white text-xl font-bold mb-2">Upload your resume</h3>
+              <p className="text-gray-200">Import your resume or paste your profile link. We parse everything instantly.</p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: 30, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, delay: 0.1 }} viewport={{ once: true }}
+              className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20"
+            >
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl"><CheckCircle className="h-5 w-5 text-white" /></div>
+                <span className="text-white font-semibold">Step 2</span>
+              </div>
+              <h3 className="text-white text-xl font-bold mb-2">Get AI fixes</h3>
+              <p className="text-gray-200">Receive prioritized fixes, bullet re-writes, and ATS‑score improvements.</p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: 30, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, delay: 0.2 }} viewport={{ once: true }}
+              className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20"
+            >
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl"><Target className="h-5 w-5 text-white" /></div>
+                <span className="text-white font-semibold">Step 3</span>
+              </div>
+              <h3 className="text-white text-xl font-bold mb-2">Match and apply</h3>
+              <p className="text-gray-200">Discover top matches and apply with tailored resumes in one click.</p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: 30, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, delay: 0.3 }} viewport={{ once: true }}
+              className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 flex flex-col justify-between"
+            >
+              <div>
+                <h3 className="text-white text-xl font-bold mb-2">Try a quick demo</h3>
+                <p className="text-gray-200 mb-4">See your simulated resume score in seconds — no signup.</p>
+              </div>
+              <Button onClick={() => setShowDemo(true)} className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-xl">Try Demo</Button>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
-      <section ref={featuresRef} id="features" className="relative py-24 bg-gradient-to-b from-violet-50/30 via-indigo-50/40 to-slate-100/50">
+      <section ref={featuresRef} id="features" className="relative py-24">
         <div className="container mx-auto px-6">
           <motion.div 
             initial={{ y: 50, opacity: 0 }}
@@ -706,10 +795,10 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-20"
           >
-            <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight">
               Career intelligence at your fingertips
         </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-200 max-w-3xl mx-auto font-light">
               Advanced AI algorithms and machine learning models power every aspect of CareerBuddy, 
               delivering personalized insights and actionable recommendations.
             </p>
@@ -822,7 +911,7 @@ export default function HomePage() {
 
 
       {/* Testimonials Section */}
-      <section ref={testimonialsRef} id="testimonials" className="relative py-24 bg-gradient-to-b from-violet-50/30 via-indigo-50/40 to-slate-100/50">
+      <section ref={testimonialsRef} id="testimonials" className="relative py-24">
         <div className="container mx-auto px-6">
           <motion.div 
             initial={{ y: 50, opacity: 0 }}
@@ -831,10 +920,10 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-20"
           >
-            <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight">
               Loved by career professionals
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-200 max-w-3xl mx-auto font-light">
               Join thousands of students and professionals who have transformed their careers with CareerBuddy.
             </p>
           </motion.div>
@@ -886,9 +975,9 @@ export default function HomePage() {
                   <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl">
                     <metric.icon className="h-6 w-6 text-white" />
                   </div>
-                  <span className="text-5xl font-bold text-gray-800">{metric.number}</span>
+                  <span className="text-5xl font-bold text-white">{metric.number}</span>
                 </div>
-                <p className="text-gray-700 font-medium text-lg">{metric.label}</p>
+                <p className="text-gray-200 font-medium text-lg">{metric.label}</p>
               </div>
             ))}
           </motion.div>
@@ -896,7 +985,7 @@ export default function HomePage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="relative py-24 bg-gradient-to-br from-slate-100/50 via-indigo-100/30 to-violet-200/40">
+      <section className="relative py-24">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[size:72px_72px]"></div>
         
         <div className="container mx-auto px-6 text-center relative z-10">
@@ -969,10 +1058,22 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Sticky Mobile CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-black/60 backdrop-blur-lg border-t border-white/10 px-4 py-3">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          <Button asChild className="flex-1 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-xl">
+            <Link href="/auth/register">Get Started</Link>
+          </Button>
+          <Button variant="outline" className="flex-1 border-white/20 text-white hover:bg-white/10 rounded-xl" onClick={() => setShowDemo(true)}>
+            Try Demo
+          </Button>
+        </div>
+      </div>
+
       {/* Footer */}
-      <footer className="relative bg-gradient-to-b from-violet-200/40 to-slate-800 text-white">
+      <footer className="relative text-white">
         <div className="container mx-auto px-6 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
             <div className="col-span-1 md:col-span-2">
               <motion.div 
                 initial={{ y: 20, opacity: 0 }}
@@ -1009,22 +1110,12 @@ export default function HomePage() {
             </div>
             
             <div>
-              <h3 className="font-semibold text-white mb-4">Resources</h3>
-              <ul className="space-y-3 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">API</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-              </ul>
-            </div>
-            
-            <div>
               <h3 className="font-semibold text-white mb-4">Company</h3>
               <ul className="space-y-3 text-gray-400">
                 <li><a href="#" className="hover:text-white transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms</a></li>
+                <li><a href="/contact" className="hover:text-white transition-colors">Contact</a></li>
+                <li><a href="/privacy" className="hover:text-white transition-colors">Privacy</a></li>
+                <li><a href="/terms" className="hover:text-white transition-colors">Terms</a></li>
               </ul>
             </div>
           </div>
@@ -1050,3 +1141,6 @@ export default function HomePage() {
     </div>
   );
 }
+
+// Try Demo Modal Layer
+// Rendered conditionally above in the page via state; no separate export

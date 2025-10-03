@@ -73,6 +73,7 @@ services:
       - "3001:3001"
     environment:
       - DATABASE_URL=mongodb://careerbuddy:password@mongodb:27017/careerbuddy_db?authSource=admin
+      - MONGODB_URL=mongodb://careerbuddy:password@mongodb:27017/careerbuddy_db?authSource=admin
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - JWT_EXPIRES_IN=7d
       - FRONTEND_URL=http://localhost:3000
@@ -89,6 +90,12 @@ services:
       job-matcher:
         condition: service_healthy
     command: npm run start:dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
     networks:
       - careerbuddy_network
 
@@ -106,8 +113,10 @@ services:
       - /app/node_modules
       - /app/.next
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     command: npm run dev
+    restart: unless-stopped
     networks:
       - careerbuddy_network
 

@@ -24,6 +24,11 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
+    
+    /* Font families */
+    --font-inter: 'Inter', system-ui, sans-serif;
+    --font-poppins: 'Poppins', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
   }
 
   .dark {
@@ -60,6 +65,37 @@
   
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    font-variant-ligatures: contextual;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Typography improvements */
+  h1, h2, h3, h4, h5, h6 {
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    letter-spacing: -0.025em;
+  }
+  
+  .font-display {
+    font-family: var(--font-poppins);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+  }
+  
+  .font-heading {
+    font-family: var(--font-poppins);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  
+  .font-body {
+    font-family: var(--font-inter);
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  
+  .font-mono {
+    font-family: var(--font-mono);
   }
 }
 

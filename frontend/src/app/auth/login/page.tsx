@@ -236,6 +236,7 @@ export default function LoginPage() {
                 <div className="space-y-3 text-xs">
                   {[
                     { role: "Student", email: "student@careerbuddy.com", password: "student123", icon: "🎓" },
+                    { role: "Counsellor", email: "counselor@careerbuddy.com", password: "counselor123", icon: "👩‍🏫" },
                     { role: "Admin", email: "admin@careerbuddy.com", password: "admin123", icon: "👨‍💼" }
                   ].map((demo, index) => (
                     <motion.div

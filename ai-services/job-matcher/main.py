@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict, Any
+from contextlib import asynccontextmanager
 import uvicorn
 import os
 from dotenv import load_dotenv
@@ -40,10 +41,10 @@ recommendation_engine = RecommendationEngine()
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup"""
-    print("🚀 Job Matcher service starting up...")
+    print("Job Matcher service starting up...")
     await job_matcher.initialize()
     await recommendation_engine.initialize()
-    print("✅ Job Matcher service ready!")
+    print("Job Matcher service ready!")
 
 @app.get("/")
 async def root():
