@@ -1,6 +1,6 @@
 import { IsString, IsEnum, IsOptional, IsInt, IsDateString, IsMongoId } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { SessionType } from '@prisma/client';
+import { SessionType } from '../../common/schemas/analytics.schema';
 
 export class CreateSessionDto {
   @ApiProperty({ description: 'Student ID for the session' })

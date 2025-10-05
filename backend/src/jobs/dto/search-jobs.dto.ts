@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { ExperienceLevel, EmploymentType, LocationType } from '@prisma/client';
+import { ExperienceLevel, EmploymentType, LocationType } from '../schemas/job.schema';
 
 export class SearchJobsDto {
   @ApiProperty({ description: 'Search query (title, description, company)', required: false })

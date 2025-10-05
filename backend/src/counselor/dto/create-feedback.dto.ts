@@ -1,6 +1,6 @@
 import { IsString, IsEnum, IsOptional, IsInt, IsBoolean, IsMongoId } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { FeedbackType, FeedbackSeverity } from '@prisma/client';
+import { FeedbackType, FeedbackSeverity } from '../../resumes/schemas/resume.schema';
 
 export class CreateFeedbackDto {
   @ApiProperty({ description: 'Resume ID to provide feedback for' })

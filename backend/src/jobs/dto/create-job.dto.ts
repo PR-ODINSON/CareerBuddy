@@ -11,7 +11,7 @@ import {
   MinLength
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { ExperienceLevel, EmploymentType, LocationType } from '@prisma/client';
+import { ExperienceLevel, EmploymentType, LocationType } from '../schemas/job.schema';
 
 export class CreateJobDto {
   @ApiProperty({ description: 'Job title' })
