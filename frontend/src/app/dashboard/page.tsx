@@ -105,32 +105,8 @@ export default function DashboardPage() {
     },
   ];
 
-  const recentActivity = [
-    {
-      icon: Star,
-      title: 'Profile viewed by TechCorp',
-      time: '2 hours ago',
-      type: 'view'
-    },
-    {
-      icon: FileText,
-      title: 'Resume updated successfully',
-      time: '1 day ago',
-      type: 'update'
-    },
-    {
-      icon: Briefcase,
-      title: 'Applied to Software Engineer at StartupXYZ',
-      time: '2 days ago',
-      type: 'application'
-    },
-    {
-      icon: Users,
-      title: 'Career counseling session completed',
-      time: '1 week ago',
-      type: 'session'
-    },
-  ];
+  // Recent activity will be fetched from API
+  const recentActivity: any[] = [];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -241,30 +217,33 @@ export default function DashboardPage() {
           <motion.div variants={itemVariants}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
             <Card>
-              <CardContent className="p-0">
-                <div className="space-y-4 p-6">
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-start space-x-3">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                          <activity.icon className="h-4 w-4 text-gray-600" />
+              <CardContent className="p-6">
+                {recentActivity.length > 0 ? (
+                  <div className="space-y-4">
+                    {recentActivity.map((activity, index) => (
+                      <div key={index} className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                            <activity.icon className="h-4 w-4 text-gray-600" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{activity.title}</p>
+                          <div className="flex items-center mt-1">
+                            <Clock className="h-3 w-3 text-gray-400 mr-1" />
+                            <p className="text-xs text-gray-500">{activity.time}</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                        <div className="flex items-center mt-1">
-                          <Clock className="h-3 w-3 text-gray-400 mr-1" />
-                          <p className="text-xs text-gray-500">{activity.time}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="px-6 py-3 bg-gray-50 border-t">
-                  <Link href="/dashboard/activity" className="text-sm font-medium text-blue-600 hover:text-blue-700">
-                    View all activity →
-                  </Link>
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-sm">No recent activity</p>
+                    <p className="text-gray-400 text-xs mt-1">Your activity will appear here as you use CareerBuddy</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>

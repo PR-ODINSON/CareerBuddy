@@ -78,6 +78,14 @@ export class ResumesController {
     return this.resumesService.update(id, userId, { isActive: true });
   }
 
+  @Get(':id/analysis')
+  @ApiOperation({ summary: 'Get resume analysis results' })
+  @ApiResponse({ status: 200, description: 'Analysis results retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Resume not found or not analyzed' })
+  getAnalysis(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.resumesService.getAnalysis(id, userId);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete resume' })
   @ApiResponse({ status: 200, description: 'Resume deleted successfully' })

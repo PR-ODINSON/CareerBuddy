@@ -41,6 +41,16 @@ export class Resume {
 
   @Prop({ default: 1 })
   version: number;
+
+  // Analysis data
+  @Prop({ type: MongooseSchema.Types.Mixed })
+  analysisResults?: any; // Stored analysis results
+
+  @Prop({ default: false })
+  isAnalyzed: boolean; // Flag to mark if resume has been analyzed
+
+  @Prop()
+  lastAnalyzedAt?: Date; // When was it last analyzed
 }
 
 export const ResumeSchema = SchemaFactory.createForClass(Resume);

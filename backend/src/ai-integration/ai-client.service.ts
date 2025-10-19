@@ -104,96 +104,26 @@ export class AiClientService {
 
   // ====== RESUME ANALYSIS METHODS ======
 
-  async analyzeResumeFile(fileBuffer: Buffer, fileName: string): Promise<ResumeAnalysisResult> {
+  async analyzeResumeFile(fileBuffer: Buffer, fileName: string): Promise<any> {
     try {
-      // Use built-in AI service instead of microservice
+      // Use built-in AI service and return its result directly
       const builtInResult = await this.builtInAiService.analyzeResumeFile(fileBuffer, fileName);
       
-      // Convert built-in result to expected format
-      const result: ResumeAnalysisResult = {
-        parsed_data: {
-          contact_info: builtInResult.sections.contact ? { available: true } : {},
-          summary: builtInResult.sections.summary ? 'Summary section detected' : '',
-          experience: builtInResult.experience_years > 0 ? [`${builtInResult.experience_years} years experience`] : [],
-          education: builtInResult.sections.education ? ['Education section detected'] : [],
-          skills: builtInResult.skills,
-          achievements: [],
-          keywords: Object.keys(builtInResult.keyword_density)
-        },
-        ats_score: {
-          overall_score: builtInResult.ats_score,
-          formatting_score: builtInResult.sections.contact && builtInResult.sections.summary ? 85 : 60,
-          content_score: builtInResult.skills.length > 5 ? 80 : 60,
-          keyword_score: Math.min(builtInResult.skills.length * 10, 100)
-        },
-        feedback: builtInResult.feedback.improvements.map(improvement => ({
-          type: 'improvement',
-          category: 'content',
-          title: improvement,
-          description: improvement,
-          severity: 'medium'
-        })).concat(
-          builtInResult.feedback.suggestions.map(suggestion => ({
-            type: 'suggestion',
-            category: 'optimization',
-            title: suggestion,
-            description: suggestion,
-            severity: 'low'
-          }))
-        ),
-        overall_score: builtInResult.ats_score
-      };
-
       this.logger.log(`Resume analysis completed for file: ${fileName} (Built-in AI)`);
-      return result;
+      return builtInResult;
     } catch (error) {
       this.logger.error(`Resume analysis failed for file: ${fileName}`, error);
       throw new BadRequestException('Resume analysis failed. Please try again.');
     }
   }
 
-  async analyzeResumeText(content: string): Promise<ResumeAnalysisResult> {
+  async analyzeResumeText(content: string): Promise<any> {
     try {
-      // Use built-in AI service instead of microservice
+      // Use built-in AI service and return its result directly
       const builtInResult = await this.builtInAiService.analyzeResumeText(content);
-      
-      // Convert built-in result to expected format (same as analyzeResumeFile)
-      const result: ResumeAnalysisResult = {
-        parsed_data: {
-          contact_info: builtInResult.sections.contact ? { available: true } : {},
-          summary: builtInResult.sections.summary ? 'Summary section detected' : '',
-          experience: builtInResult.experience_years > 0 ? [`${builtInResult.experience_years} years experience`] : [],
-          education: builtInResult.sections.education ? ['Education section detected'] : [],
-          skills: builtInResult.skills,
-          achievements: [],
-          keywords: Object.keys(builtInResult.keyword_density)
-        },
-        ats_score: {
-          overall_score: builtInResult.ats_score,
-          formatting_score: builtInResult.sections.contact && builtInResult.sections.summary ? 85 : 60,
-          content_score: builtInResult.skills.length > 5 ? 80 : 60,
-          keyword_score: Math.min(builtInResult.skills.length * 10, 100)
-        },
-        feedback: builtInResult.feedback.improvements.map(improvement => ({
-          type: 'improvement',
-          category: 'content',
-          title: improvement,
-          description: improvement,
-          severity: 'medium'
-        })).concat(
-          builtInResult.feedback.suggestions.map(suggestion => ({
-            type: 'suggestion',
-            category: 'optimization',
-            title: suggestion,
-            description: suggestion,
-            severity: 'low'
-          }))
-        ),
-        overall_score: builtInResult.ats_score
-      };
 
       this.logger.log('Resume text analysis completed (Built-in AI)');
-      return result;
+      return builtInResult;
     } catch (error) {
       this.logger.error('Resume text analysis failed', error);
       throw new BadRequestException('Resume analysis failed. Please try again.');

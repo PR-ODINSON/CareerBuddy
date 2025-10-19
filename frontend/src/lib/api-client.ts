@@ -93,6 +93,11 @@ class ApiClient {
     return response.data;
   }
 
+  async getResumeAnalysis(resumeId: string) {
+    const response = await this.client.get(`/resumes/${resumeId}/analysis`);
+    return response.data;
+  }
+
   // Job endpoints
   async getJobs(params?: any) {
     const response = await this.client.get('/jobs', { params });
@@ -106,6 +111,11 @@ class ApiClient {
 
   async getJobRecommendations(limit = 10) {
     const response = await this.client.get('/jobs/recommendations', { params: { limit } });
+    return response.data;
+  }
+
+  async getResumeBasedJobRecommendations(analysisData: { skills: string[]; experience_years: number; ats_score: number }) {
+    const response = await this.client.post('/jobs/recommendations', analysisData);
     return response.data;
   }
 
@@ -127,6 +137,11 @@ class ApiClient {
   }
 
   async applyForJob(applicationData: any) {
+    const response = await this.client.post('/applications', applicationData);
+    return response.data;
+  }
+
+  async createApplication(applicationData: any) {
     const response = await this.client.post('/applications', applicationData);
     return response.data;
   }

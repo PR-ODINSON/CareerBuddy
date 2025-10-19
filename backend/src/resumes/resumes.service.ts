@@ -127,6 +127,17 @@ export class ResumesService {
       const fileBuffer = fs.readFileSync(resume.filePath);
       const analysis = await this.aiClientService.analyzeResumeFile(fileBuffer, resume.fileName);
       
+      // Save analysis results and mark as analyzed
+      await this.resumeModel.findByIdAndUpdate(id, {
+        analysisResults: analysis,
+        isAnalyzed: true,
+        lastAnalyzedAt: new Date(),
+        // Update parsed content from analysis
+        content: analysis,
+        skills: analysis.skills || [],
+        experience: analysis.experience_years || 0,
+      });
+      
       // Store AI feedback
       await this.storeFeedback(id, analysis);
 
@@ -149,6 +160,29 @@ export class ResumesService {
       .find({ resumeId })
       .sort({ createdAt: -1 })
       .lean();
+  }
+
+  async getAnalysis(id: string, userId: string) {
+    const resume = await this.resumeModel
+      .findOne({ _id: id, userId })
+      .lean();
+
+    if (!resume) {
+      throw new NotFoundException('Resume not found');
+    }
+
+    if (!resume.isAnalyzed || !resume.analysisResults) {
+      throw new NotFoundException('Resume has not been analyzed yet');
+    }
+
+    return {
+      resume: {
+        title: resume.title,
+        fileName: resume.fileName,
+        lastAnalyzedAt: resume.lastAnalyzedAt
+      },
+      analysis: resume.analysisResults
+    };
   }
 
   private async triggerAiParsing(resumeId: string, filePath: string) {
@@ -177,10 +211,13 @@ export class ResumesService {
         this.resumeFeedbackModel.create({
           resumeId,
           type: this.mapFeedbackType(feedback.type),
+          category: feedback.category || 'general',
           severity: this.mapFeedbackSeverity(feedback.severity),
           title: feedback.title,
           description: feedback.description,
           suggestion: feedback.suggestion,
+          section: feedback.section,
+          lineNumber: feedback.line_number,
           isAiGenerated: true,
           isResolved: false
         })

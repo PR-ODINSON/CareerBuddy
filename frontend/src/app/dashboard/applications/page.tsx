@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,12 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   useApplications, 
   useApplicationStats, 
   useUpcomingInterviews, 
   useUpdateApplication, 
-  useWithdrawApplication 
+  useWithdrawApplication,
+  useCreateApplication,
+  useJobs,
+  useResumes
 } from '@/hooks/useApi';
 import {
   Briefcase,
@@ -41,94 +48,60 @@ export default function ApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedJob, setSelectedJob] = useState('');
+  const [selectedResume, setSelectedResume] = useState('');
+  const [coverLetter, setCoverLetter] = useState('');
+  const [notes, setNotes] = useState('');
 
-  const applications = [
-    {
-      id: 1,
-      jobTitle: 'Frontend Developer',
-      company: 'TechCorp Inc.',
-      companyLogo: '🚀',
-      location: 'San Francisco, CA',
-      salary: '$80,000 - $120,000',
-      appliedDate: '2024-01-15',
-      status: 'interview',
-      stage: 'Technical Interview',
-      nextStep: 'Final round scheduled',
-      nextDate: '2024-01-25',
-      resumeUsed: 'Frontend Developer Resume v2.1',
-      notes: 'Great team culture, flexible working hours'
-    },
-    {
-      id: 2,
-      jobTitle: 'Software Engineer',
-      company: 'StartupXYZ',
-      companyLogo: '💡',
-      location: 'Austin, TX',
-      salary: '$90,000 - $130,000',
-      appliedDate: '2024-01-10',
-      status: 'applied',
-      stage: 'Application Submitted',
-      nextStep: 'Waiting for response',
-      nextDate: null,
-      resumeUsed: 'Software Engineer Resume v1.3',
-      notes: 'Innovative fintech startup, remote-friendly'
-    },
-    {
-      id: 3,
-      jobTitle: 'UI/UX Designer',
-      company: 'DesignHub',
-      companyLogo: '🎨',
-      location: 'New York, NY',
-      salary: '$70,000 - $90,000',
-      appliedDate: '2024-01-08',
-      status: 'rejected',
-      stage: 'Application Review',
-      nextStep: 'Application closed',
-      nextDate: null,
-      resumeUsed: 'Design Resume v1.0',
-      notes: 'Portfolio review feedback: Focus more on user research'
-    },
-    {
-      id: 4,
-      jobTitle: 'Full Stack Developer',
-      company: 'WebSolutions',
-      companyLogo: '🌐',
-      location: 'Seattle, WA',
-      salary: '$85,000 - $110,000',
-      appliedDate: '2024-01-05',
-      status: 'offer',
-      stage: 'Offer Received',
-      nextStep: 'Negotiating terms',
-      nextDate: '2024-01-20',
-      resumeUsed: 'Full Stack Resume v1.5',
-      notes: 'Great benefits package, 4-day work week'
-    },
-    {
-      id: 5,
-      jobTitle: 'Data Analyst Intern',
-      company: 'DataCorp',
-      companyLogo: '📊',
-      location: 'Boston, MA',
-      salary: '$25 - $30/hour',
-      appliedDate: '2024-01-03',
-      status: 'interview',
-      stage: 'Phone Screen',
-      nextStep: 'Technical assessment',
-      nextDate: '2024-01-22',
-      resumeUsed: 'Internship Resume v1.0',
-      notes: 'Summer internship program, good learning opportunities'
+  const router = useRouter();
+  const { toast } = useToast();
+  
+  // Fetch applications from API
+  const { data: applications = [], isLoading: applicationsLoading, error: applicationsError } = useApplications(statusFilter === 'all' ? undefined : statusFilter);
+  const { data: stats } = useApplicationStats();
+  const { data: jobs = [], isLoading: jobsLoading } = useJobs();
+  const { data: resumes = [], isLoading: resumesLoading } = useResumes();
+  const createApplication = useCreateApplication();
+
+  const handleAddApplication = async () => {
+    if (!selectedJob || !selectedResume) {
+      toast({
+        title: "Error",
+        description: "Please select both a job and a resume",
+        variant: "destructive",
+      });
+      return;
     }
-  ];
+
+    try {
+      await createApplication.mutateAsync({
+        jobId: selectedJob,
+        resumeId: selectedResume,
+        coverLetter: coverLetter || undefined,
+        notes: notes || undefined,
+      });
+      
+      // Reset form
+      setSelectedJob('');
+      setSelectedResume('');
+      setCoverLetter('');
+      setNotes('');
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Failed to create application:', error);
+    }
+  };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'applied':
+    switch (status.toUpperCase()) {
+      case 'APPLIED':
         return 'text-blue-600 bg-blue-50 border-blue-200';
-      case 'interview':
+      case 'INTERVIEW':
         return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'offer':
+      case 'OFFER':
         return 'text-green-600 bg-green-50 border-green-200';
-      case 'rejected':
+      case 'REJECTED':
         return 'text-red-600 bg-red-50 border-red-200';
       default:
         return 'text-gray-600 bg-gray-50 border-gray-200';
@@ -136,14 +109,14 @@ export default function ApplicationsPage() {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'applied':
+    switch (status.toUpperCase()) {
+      case 'APPLIED':
         return <Clock className="h-4 w-4" />;
-      case 'interview':
+      case 'INTERVIEW':
         return <AlertCircle className="h-4 w-4" />;
-      case 'offer':
+      case 'OFFER':
         return <CheckCircle className="h-4 w-4" />;
-      case 'rejected':
+      case 'REJECTED':
         return <XCircle className="h-4 w-4" />;
       default:
         return <Clock className="h-4 w-4" />;
@@ -151,18 +124,18 @@ export default function ApplicationsPage() {
   };
 
   const statusCounts = {
-    applied: applications.filter(app => app.status === 'applied').length,
-    interview: applications.filter(app => app.status === 'interview').length,
-    offer: applications.filter(app => app.status === 'offer').length,
-    rejected: applications.filter(app => app.status === 'rejected').length,
+    applied: Array.isArray(applications) ? applications.filter((app: any) => app.status === 'APPLIED').length : 0,
+    interview: Array.isArray(applications) ? applications.filter((app: any) => app.status === 'INTERVIEW').length : 0,
+    offer: Array.isArray(applications) ? applications.filter((app: any) => app.status === 'OFFER').length : 0,
+    rejected: Array.isArray(applications) ? applications.filter((app: any) => app.status === 'REJECTED').length : 0,
   };
 
-  const filteredApplications = applications.filter(app => {
-    const matchesSearch = app.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         app.company.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
+  const filteredApplications = Array.isArray(applications) ? applications.filter((app: any) => {
+    const matchesSearch = (app.jobId?.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (app.jobId?.company || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || app.status.toLowerCase() === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -198,11 +171,18 @@ export default function ApplicationsPage() {
             <p className="text-gray-600 mt-1">Track and manage your job applications</p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Export
+            <Button 
+              onClick={() => router.push('/dashboard/jobs')}
+              variant="outline" 
+              size="sm"
+            >
+              <Search className="h-4 w-4 mr-2" />
+              Find Jobs
             </Button>
-            <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
+            <Button 
+              onClick={() => setShowAddModal(true)}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Application
             </Button>
@@ -257,7 +237,7 @@ export default function ApplicationsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Applications</p>
-                    <p className="text-2xl font-bold text-gray-900">{applications.length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.total || (Array.isArray(applications) ? applications.length : 0)}</p>
                   </div>
                   <Briefcase className="h-8 w-8 text-blue-600" />
                 </div>
@@ -269,7 +249,7 @@ export default function ApplicationsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">In Progress</p>
-                    <p className="text-2xl font-bold text-gray-900">{statusCounts.applied + statusCounts.interview}</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.inProgress || (statusCounts.applied + statusCounts.interview)}</p>
                   </div>
                   <Clock className="h-8 w-8 text-yellow-600" />
                 </div>
@@ -281,7 +261,7 @@ export default function ApplicationsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Interviews</p>
-                    <p className="text-2xl font-bold text-gray-900">{statusCounts.interview}</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.interviews || statusCounts.interview}</p>
                   </div>
                   <Users className="h-8 w-8 text-orange-600" />
                 </div>
@@ -293,7 +273,7 @@ export default function ApplicationsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Offers</p>
-                    <p className="text-2xl font-bold text-gray-900">{statusCounts.offer}</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.offers || statusCounts.offer}</p>
                   </div>
                   <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
@@ -304,7 +284,19 @@ export default function ApplicationsPage() {
 
         {/* Applications List */}
         <motion.div variants={itemVariants} className="space-y-4">
-          {filteredApplications.map((application, index) => (
+          {applicationsLoading ? (
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading applications...</p>
+            </div>
+          ) : applicationsError ? (
+            <div className="text-center py-16">
+              <Briefcase className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Applications</h3>
+              <p className="text-gray-500 mb-6">There was an error loading your applications. Please try again.</p>
+            </div>
+          ) : filteredApplications.length > 0 ? (
+            filteredApplications.map((application: any, index: number) => (
             <motion.div
               key={application.id}
               variants={itemVariants}
@@ -318,19 +310,19 @@ export default function ApplicationsPage() {
                       <div className="flex items-start space-x-4">
                         <div className="flex-shrink-0">
                           <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex items-center justify-center text-2xl border border-gray-200">
-                            {application.companyLogo}
+                            {application.jobId?.company?.charAt(0) || 'J'}
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div>
                               <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                                {application.jobTitle}
+                                {application.jobId?.title || 'Job Title'}
                               </h3>
                               <div className="flex items-center space-x-4 mt-1">
                                 <div className="flex items-center text-gray-600">
                                   <Building className="h-4 w-4 mr-1" />
-                                  <span className="font-medium">{application.company}</span>
+                                  <span className="font-medium">{application.jobId?.company || 'Company'}</span>
                                 </div>
                               </div>
                             </div>
@@ -342,42 +334,39 @@ export default function ApplicationsPage() {
                             </div>
                           </div>
                           
-                          <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-gray-600">
+                            <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-gray-600">
                             <div className="flex items-center">
                               <MapPin className="h-4 w-4 mr-1" />
-                              {application.location}
+                              {application.jobId?.location || 'Location not specified'}
                             </div>
                             <div className="flex items-center">
                               <DollarSign className="h-4 w-4 mr-1" />
-                              {application.salary}
+                              {application.jobId?.salaryRange || 'Salary not specified'}
                             </div>
                             <div className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
-                              Applied {new Date(application.appliedDate).toLocaleDateString()}
+                              Applied {new Date(application.appliedAt).toLocaleDateString()}
                             </div>
                           </div>
                           
                           <div className="mt-3">
                             <div className="flex items-center text-sm">
-                              <span className="font-medium text-gray-700">Current Stage:</span>
-                              <span className="ml-2 text-gray-600">{application.stage}</span>
+                              <span className="font-medium text-gray-700">Status:</span>
+                              <span className="ml-2 text-gray-600 capitalize">{application.status.toLowerCase()}</span>
                             </div>
-                            <div className="flex items-center text-sm mt-1">
-                              <span className="font-medium text-gray-700">Next Step:</span>
-                              <span className="ml-2 text-gray-600">{application.nextStep}</span>
-                              {application.nextDate && (
-                                <span className="ml-2 text-blue-600">
-                                  ({new Date(application.nextDate).toLocaleDateString()})
-                                </span>
-                              )}
-                            </div>
+                            {application.notes && (
+                              <div className="flex items-center text-sm mt-1">
+                                <span className="font-medium text-gray-700">Notes:</span>
+                                <span className="ml-2 text-gray-600">{application.notes}</span>
+                              </div>
+                            )}
                           </div>
                           
-                          {application.notes && (
+                          {application.coverLetter && (
                             <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                               <p className="text-sm text-gray-700">
                                 <FileText className="h-4 w-4 inline mr-1" />
-                                {application.notes}
+                                <strong>Cover Letter:</strong> {application.coverLetter.substring(0, 100)}{application.coverLetter.length > 100 ? '...' : ''}
                               </p>
                             </div>
                           )}
@@ -401,14 +390,28 @@ export default function ApplicationsPage() {
                         </Button>
                       </div>
                       <div className="text-xs text-gray-500">
-                        Resume: {application.resumeUsed}
+                        Resume: {application.resumeId?.title || 'Default Resume'}
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+            ))
+          ) : (
+            <div className="text-center py-16">
+              <Briefcase className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No applications yet</h3>
+              <p className="text-gray-500 mb-6">Start applying to jobs to track your applications here</p>
+              <Button 
+                onClick={() => router.push('/dashboard/jobs')}
+                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Find Jobs to Apply
+              </Button>
+            </div>
+          )}
         </motion.div>
 
         {/* Application Pipeline */}
@@ -446,6 +449,103 @@ export default function ApplicationsPage() {
           </Card>
         </motion.div>
       </motion.div>
+
+      {/* Add Application Modal */}
+      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+        <DialogContent>
+          <DialogClose onClose={() => setShowAddModal(false)} />
+          <DialogHeader>
+            <DialogTitle>Add New Application</DialogTitle>
+            <DialogDescription>
+              Create a new job application by selecting a job and resume.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label htmlFor="job-select">Select Job</Label>
+              <Select value={selectedJob} onValueChange={setSelectedJob}>
+                <SelectTrigger id="job-select">
+                  <SelectValue placeholder="Choose a job..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {jobsLoading ? (
+                    <SelectItem value="" disabled>Loading jobs...</SelectItem>
+                  ) : Array.isArray(jobs) && jobs.length > 0 ? (
+                    jobs.map((job: any) => (
+                      <SelectItem key={job._id} value={job._id}>
+                        {job.title} - {job.company}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>No jobs available</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="resume-select">Select Resume</Label>
+              <Select value={selectedResume} onValueChange={setSelectedResume}>
+                <SelectTrigger id="resume-select">
+                  <SelectValue placeholder="Choose a resume..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {resumesLoading ? (
+                    <SelectItem value="" disabled>Loading resumes...</SelectItem>
+                  ) : Array.isArray(resumes) && resumes.length > 0 ? (
+                    resumes.map((resume: any) => (
+                      <SelectItem key={resume._id} value={resume._id}>
+                        {resume.title}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>No resumes available</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="cover-letter">Cover Letter (Optional)</Label>
+              <Textarea
+                id="cover-letter"
+                placeholder="Write your cover letter here..."
+                value={coverLetter}
+                onChange={(e) => setCoverLetter(e.target.value)}
+                rows={4}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Any additional notes..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAddModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleAddApplication}
+                disabled={createApplication.isPending}
+                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+              >
+                {createApplication.isPending ? 'Creating...' : 'Create Application'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import ResumeAnalysisResults from '@/components/dashboard/ResumeAnalysisResults';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -36,9 +39,12 @@ import {
 } from 'lucide-react';
 
 export default function ResumesPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [resumeName, setResumeName] = useState('');
+  const [selectedResumeAnalysis, setSelectedResumeAnalysis] = useState<any>(null);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -88,9 +94,20 @@ export default function ResumesPage() {
 
   const handleAnalyze = async (resumeId: string) => {
     try {
-      await analyzeResume.mutateAsync(resumeId);
+      const result = await analyzeResume.mutateAsync(resumeId);
+      if (result) {
+        // Navigate to analysis page
+        router.push(`/dashboard/resumes/analysis/${resumeId}`);
+      }
     } catch (error) {
       console.error('Analysis failed:', error);
+    }
+  };
+
+  const handleViewAnalysis = (resume: any) => {
+    if (resume.analysisResults || resume.isAnalyzed) {
+      // Navigate to analysis page
+      router.push(`/dashboard/resumes/analysis/${resume._id}`);
     }
   };
 
@@ -399,15 +416,33 @@ export default function ResumesPage() {
                       
                       <div className="flex flex-col lg:items-end space-y-3">
                         <div className="flex space-x-2">
+                      {resume.isAnalyzed || resume.analysisResults ? (
+                        <>
+                          <Badge variant="secondary" className="bg-green-100 text-green-800 mb-2">
+                            <Award className="h-3 w-3 mr-1" />
+                            Analyzed
+                          </Badge>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => handleAnalyze(resume._id)}
-                            disabled={analyzeResume.isPending}
+                            onClick={() => handleViewAnalysis(resume)}
+                            className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
                           >
-                            <Search className="h-4 w-4 mr-1" />
-                            {analyzeResume.isPending ? 'Analyzing...' : 'Analyze'}
+                            <Eye className="h-4 w-4 mr-1" />
+                            View Analysis
                           </Button>
+                        </>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleAnalyze(resume._id)}
+                          disabled={analyzeResume.isPending}
+                        >
+                          <Search className="h-4 w-4 mr-1" />
+                          {analyzeResume.isPending ? 'Analyzing...' : 'Analyze'}
+                        </Button>
+                      )}
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -550,6 +585,48 @@ export default function ResumesPage() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Analysis Results Modal */}
+        {showAnalysisModal && selectedResumeAnalysis && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowAnalysisModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Resume Analysis Results</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowAnalysisModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </Button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                <ResumeAnalysisResults 
+                  analysis={selectedResumeAnalysis}
+                  onReanalyze={() => {
+                    setShowAnalysisModal(false);
+                    // Find the resume ID and re-analyze
+                    const resume = resumes.find((r: any) => r.analysisResults === selectedResumeAnalysis);
+                    if (resume) {
+                      handleAnalyze(resume._id);
+                    }
+                  }}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </motion.div>
     </DashboardLayout>
   );

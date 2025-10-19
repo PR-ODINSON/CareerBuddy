@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 
-import { JobsService } from './jobs.service';
+import { JobsService, JobRecommendationRequest } from './jobs.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -46,6 +46,15 @@ export class JobsController {
   searchJobs(@Query() searchDto: SearchJobsDto) {
     const { page = 1, limit = 20, ...filters } = searchDto;
     return this.jobsService.search(searchDto);
+  }
+
+  @Post('recommendations')
+  @ApiOperation({ summary: 'Get job recommendations based on resume analysis' })
+  @ApiResponse({ status: 200, description: 'Resume-based job recommendations' })
+  getResumeBasedRecommendations(
+    @Body() request: JobRecommendationRequest
+  ) {
+    return this.jobsService.getRecommendations(request);
   }
 
   @Get('recommendations')

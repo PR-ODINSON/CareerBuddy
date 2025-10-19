@@ -240,7 +240,8 @@ export default function JobsPage() {
 
         {/* Job Listings */}
         <motion.div variants={itemVariants} className="space-y-4">
-          {jobListings.map((job, index) => (
+          {jobListings.length > 0 ? (
+            jobListings.map((job: any, index: number) => (
             <motion.div
               key={job.id}
               variants={itemVariants}
@@ -316,7 +317,7 @@ export default function JobsPage() {
                           </p>
                           
                           <div className="flex flex-wrap gap-2 mt-3">
-                            {job.skills.slice(0, 4).map((skill, skillIndex) => (
+                            {job.skills.slice(0, 4).map((skill: string, skillIndex: number) => (
                               <span
                                 key={skillIndex}
                                 className="px-2 py-1 bg-blue-50 text-blue-600 text-xs rounded-md border border-blue-200"
@@ -353,7 +354,22 @@ export default function JobsPage() {
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+            ))
+          ) : (
+            <div className="text-center py-16">
+              <Search className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No jobs found</h3>
+              <p className="text-gray-500 mb-6">Try adjusting your search criteria or check back later for new opportunities</p>
+              <Button variant="outline" onClick={() => {
+                setSearchQuery('');
+                setLocation('');
+                setJobType('');
+                setExperience('');
+              }}>
+                Clear Filters
+              </Button>
+            </div>
+          )}
         </motion.div>
 
         {/* Load More */}

@@ -13,9 +13,6 @@ import {
   Clock,
   Send,
   CheckCircle,
-  MessageSquare,
-  Users,
-  Headphones,
   GraduationCap
 } from 'lucide-react';
 
@@ -25,7 +22,7 @@ export default function ContactPage() {
     email: '',
     subject: '',
     message: '',
-    category: 'general'
+    category: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -79,12 +76,6 @@ export default function ContactPage() {
     }
   ];
 
-  const supportCategories = [
-    { value: 'general', label: 'General Inquiry', icon: MessageSquare },
-    { value: 'technical', label: 'Technical Support', icon: Headphones },
-    { value: 'billing', label: 'Billing & Pricing', icon: Users },
-    { value: 'partnership', label: 'Partnership', icon: Users }
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-800 relative overflow-hidden font-inter">
@@ -232,19 +223,15 @@ export default function ContactPage() {
                         <label htmlFor="category" className="block text-sm font-semibold text-gray-200 mb-2">
                           Category
                         </label>
-                        <select
+                        <input
+                          type="text"
                           id="category"
                           name="category"
                           value={formData.category}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                        >
-                          {supportCategories.map((category) => (
-                            <option key={category.value} value={category.value} className="bg-gray-800">
-                              {category.label}
-                            </option>
-                          ))}
-                        </select>
+                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                          placeholder="e.g., General Inquiry, Technical Support, etc."
+                        />
                       </div>
 
                       <div>
@@ -329,7 +316,7 @@ export default function ContactPage() {
                             email: '',
                             subject: '',
                             message: '',
-                            category: 'general'
+                            category: ''
                           });
                         }}
                         variant="outline"
@@ -400,30 +387,6 @@ export default function ContactPage() {
                 ))}
               </div>
 
-              {/* Support Categories */}
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.8, delay: 1 }}
-                className="mt-12"
-              >
-                <h3 className="text-xl font-bold text-white mb-6 tracking-tight">How can we help?</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {supportCategories.map((category, index) => (
-                    <motion.div
-                      key={category.value}
-                      initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 1.2 + index * 0.1 }}
-                      whileHover={{ scale: 1.05 }}
-                      className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg p-4 text-center hover:bg-white/10 transition-all duration-300 cursor-pointer"
-                    >
-                      <category.icon className="h-8 w-8 text-blue-400 mx-auto mb-2" />
-                      <p className="text-white font-semibold text-sm tracking-wide">{category.label}</p>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
             </motion.div>
           </div>
         </div>

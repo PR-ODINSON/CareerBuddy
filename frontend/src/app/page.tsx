@@ -447,19 +447,23 @@ export default function HomePage() {
               ))}
             </nav>
             <div className="flex items-center space-x-4">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-white/10 rounded-lg" asChild>
-                  <Link href="/auth/login">Sign in</Link>
-            </Button>
-              </motion.div>
               <motion.div 
                 whileHover={{ scale: 1.05, y: -2 }} 
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button className="relative bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 rounded-xl px-6 py-2 font-medium shadow-lg hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 overflow-hidden group" asChild>
-                  <Link href="/auth/register">
-                    <span className="relative z-10">Get Started</span>
+                <Button className="relative bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 rounded-xl px-8 py-3 font-semibold shadow-lg hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 overflow-hidden group" asChild>
+                  <Link href="/auth/login">
+                    <span className="relative z-10 flex items-center">
+                      Sign In
+                      <motion.div
+                        className="ml-2 inline-block"
+                        animate={{ x: [0, 3, 0] }}
+                        transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </motion.div>
+                    </span>
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400"
                       initial={{ x: "100%" }}
@@ -467,7 +471,7 @@ export default function HomePage() {
                       transition={{ duration: 0.3 }}
                     />
                   </Link>
-            </Button>
+                </Button>
               </motion.div>
             </div>
           </div>
@@ -734,7 +738,7 @@ export default function HomePage() {
             <p className="text-xl text-gray-200 max-w-3xl mx-auto font-light">Three simple steps to accelerate your job search with AI.</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
             <motion.div 
               initial={{ y: 30, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} transition={{ duration: 0.6 }} viewport={{ once: true }}
               className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20"
@@ -771,16 +775,6 @@ export default function HomePage() {
               <p className="text-gray-200">Discover top matches and apply with tailored resumes in one click.</p>
             </motion.div>
 
-            <motion.div 
-              initial={{ y: 30, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, delay: 0.3 }} viewport={{ once: true }}
-              className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 flex flex-col justify-between"
-            >
-              <div>
-                <h3 className="text-white text-xl font-bold mb-2">Try a quick demo</h3>
-                <p className="text-gray-200 mb-4">See your simulated resume score in seconds — no signup.</p>
-              </div>
-              <Button onClick={() => setShowDemo(true)} className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-xl">Try Demo</Button>
-            </motion.div>
           </div>
         </div>
       </section>
@@ -1122,7 +1116,7 @@ export default function HomePage() {
           
           <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              ©2024 CareerBuddy · All rights reserved.
+              ©2025 CareerBuddy · All rights reserved.
             </p>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
               <a href="#" className="text-gray-400 hover:text-white transition-colors">

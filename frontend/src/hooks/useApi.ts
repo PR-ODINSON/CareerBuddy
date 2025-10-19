@@ -100,6 +100,21 @@ export function useDeleteResume() {
   });
 }
 
+export function useResumeAnalysis(resumeId: string) {
+  return useQuery({
+    queryKey: ['resumes', resumeId, 'analysis'],
+    queryFn: () => apiClient.getResumeAnalysis(resumeId),
+    enabled: !!resumeId,
+  });
+}
+
+export function useResumeBasedJobRecommendations() {
+  return useMutation({
+    mutationFn: (analysisData: { skills: string[]; experience_years: number; ats_score: number }) => 
+      apiClient.getResumeBasedJobRecommendations(analysisData),
+  });
+}
+
 // Job hooks
 export function useJobs(params?: any) {
   return useQuery({
@@ -217,6 +232,29 @@ export function useWithdrawApplication() {
       toast({
         title: "Error",
         description: error.response?.data?.message || "Failed to withdraw application",
+        variant: "destructive",
+      });
+    },
+  });
+}
+
+export function useCreateApplication() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (applicationData: any) => apiClient.createApplication(applicationData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast({
+        title: "Application Created",
+        description: "Your application has been created successfully!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to create application",
         variant: "destructive",
       });
     },
