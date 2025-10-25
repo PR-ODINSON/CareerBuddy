@@ -34,26 +34,36 @@ export class JobsService {
   ) {}
 
   async findAll(page: number = 1, limit: number = 20, filters: any = {}) {
-    const skip = (page - 1) * limit;
-    
-    const jobs = await this.jobModel
-      .find(filters)
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .lean();
+    try {
+      this.logger.log(`Finding jobs with filters: ${JSON.stringify(filters)}, page: ${page}, limit: ${limit}`);
+      
+      const skip = (page - 1) * limit;
+      
+      const jobs = await this.jobModel
+        .find(filters)
+        .populate('createdBy', 'firstName lastName email')
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 })
+        .lean();
 
-    const total = await this.jobModel.countDocuments(filters);
+      const total = await this.jobModel.countDocuments(filters);
 
-    return {
-      jobs,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    };
+      this.logger.log(`Found ${jobs.length} jobs out of ${total} total`);
+
+      return {
+        jobs,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      };
+    } catch (error) {
+      this.logger.error('Error in findAll:', error);
+      throw error;
+    }
   }
 
   async search(searchDto: SearchJobsDto) {

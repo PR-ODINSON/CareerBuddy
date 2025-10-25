@@ -13,6 +13,7 @@ import { ApplicationsModule } from './applications/applications.module';
 import { AdminModule } from './admin/admin.module';
 import { CounselorModule } from './counselor/counselor.module';
 import { AiIntegrationModule } from './ai-integration/ai-integration.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 // Controllers
 import { AppController } from './app.controller';
@@ -44,6 +45,7 @@ import { AppService } from './app.service';
     AdminModule,
     CounselorModule,
     AiIntegrationModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

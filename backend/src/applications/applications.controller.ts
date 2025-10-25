@@ -56,6 +56,15 @@ export class ApplicationsController {
     return this.applicationsService.getTimeline(applicationId, userId);
   }
 
+  @Get('by-job/:jobId')
+  @ApiOperation({ summary: 'Get all applications for a specific job (Admin only)' })
+  @ApiResponse({ status: 200, description: 'List of job applications' })
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  findAllByJob(@Param('jobId') jobId: string) {
+    return this.applicationsService.findAllByJob(jobId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get specific application' })
   @ApiResponse({ status: 200, description: 'Application details' })

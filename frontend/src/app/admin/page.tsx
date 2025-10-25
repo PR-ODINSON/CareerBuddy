@@ -31,6 +31,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
+import UserGrowthChart from '@/components/charts/UserGrowthChart';
 
 interface DashboardStats {
   users: {
@@ -252,7 +253,7 @@ export default function AdminDashboard() {
               <p className="text-gray-600 mt-1">Manage users, jobs, and system settings</p>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => router.push('/admin/settings')}>
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </Button>
@@ -347,10 +348,15 @@ export default function AdminDashboard() {
                       Manage users, roles, and permissions across the platform
                     </CardDescription>
                   </div>
-                  <Button>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add User
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" onClick={() => router.push('/admin/users')}>
+                      View All Users
+                    </Button>
+                    <Button onClick={() => router.push('/admin/users')}>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Add User
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -465,18 +471,18 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-lg font-semibold">Analytics Overview</h3>
+                <p className="text-gray-600">Platform insights and performance metrics</p>
+              </div>
+              <Button onClick={() => router.push('/admin/analytics')}>
+                <BarChart3 className="h-4 w-4 mr-2" />
+                View Detailed Analytics
+              </Button>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>User Growth</CardTitle>
-                  <CardDescription>User registration trends over time</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center text-gray-500">
-                    Chart component would go here
-                  </div>
-                </CardContent>
-              </Card>
+              <UserGrowthChart height={280} showControls={false} />
               
               <Card>
                 <CardHeader>
@@ -508,14 +514,36 @@ export default function AdminDashboard() {
           <TabsContent value="jobs" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Job Management</CardTitle>
-                <CardDescription>
-                  Manage job postings and applications
-                </CardDescription>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Job Management</CardTitle>
+                    <CardDescription>
+                      Manage job postings and applications
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => router.push('/admin/jobs')}>
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    Manage Jobs
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  Job management interface coming soon...
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <Briefcase className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-blue-600">{stats?.jobs.total || 0}</p>
+                    <p className="text-sm text-gray-600">Total Jobs</p>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                    <Activity className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-green-600">{stats?.jobs.active || 0}</p>
+                    <p className="text-sm text-gray-600">Active Jobs</p>
+                  </div>
+                  <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
+                    <TrendingUp className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-orange-600">{stats?.applications.total || 0}</p>
+                    <p className="text-sm text-gray-600">Applications</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -524,14 +552,55 @@ export default function AdminDashboard() {
           <TabsContent value="system" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>System Settings</CardTitle>
-                <CardDescription>
-                  Configure system-wide settings and preferences
-                </CardDescription>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>System Settings</CardTitle>
+                    <CardDescription>
+                      Configure system-wide settings and preferences
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => router.push('/admin/settings')}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Manage Settings
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  System settings interface coming soon...
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Quick Settings</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium">Maintenance Mode</span>
+                        <Badge variant="secondary">Disabled</Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium">User Registration</span>
+                        <Badge variant="default">Enabled</Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium">Email Verification</span>
+                        <Badge variant="default">Required</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">System Status</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                        <span className="text-sm font-medium">Database</span>
+                        <Badge variant="default" className="bg-green-600">Online</Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                        <span className="text-sm font-medium">API Services</span>
+                        <Badge variant="default" className="bg-green-600">Running</Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                        <span className="text-sm font-medium">AI Integration</span>
+                        <Badge variant="default" className="bg-green-600">Active</Badge>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

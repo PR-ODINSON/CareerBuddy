@@ -35,8 +35,15 @@ export class JobsController {
   findAll(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 20,
-    @Query() filters: any
+    @Query() allParams: any,
+    @CurrentUser() user?: any
   ) {
+    console.log('Jobs findAll called by user:', user?.email, 'with all params:', allParams);
+    
+    // Remove pagination parameters from filters
+    const { page: _, limit: __, ...filters } = allParams;
+    
+    console.log('Cleaned filters:', filters);
     return this.jobsService.findAll(page, limit, filters);
   }
 

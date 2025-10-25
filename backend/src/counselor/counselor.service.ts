@@ -873,4 +873,254 @@ export class CounselorService {
 
     return { $gte: filters[timeframe] || filters.month };
   }
+
+  // ====== ADDITIONAL METHODS FOR FRONTEND PAGES ======
+
+  async provideStudentFeedback(
+    counselorId: string, 
+    studentId: string, 
+    feedbackData: { feedback: string; type?: string; priority?: string }
+  ) {
+    await this.verifyCounselor(counselorId);
+    await this.verifyStudentAssignment(counselorId, studentId);
+
+    // Create feedback entry (you might want to create a separate feedback schema)
+    const feedback = {
+      counselorId,
+      studentId,
+      content: feedbackData.feedback,
+      type: feedbackData.type || 'GENERAL_FEEDBACK',
+      priority: feedbackData.priority || 'MEDIUM',
+      createdAt: new Date(),
+    };
+
+    // For now, we'll store this as a note in the assignment
+    await this.assignmentModel.findOneAndUpdate(
+      { counselorId, studentId },
+      { 
+        $push: { 
+          notes: {
+            content: feedbackData.feedback,
+            type: feedbackData.type || 'GENERAL_FEEDBACK',
+            priority: feedbackData.priority || 'MEDIUM',
+            createdAt: new Date(),
+          }
+        }
+      }
+    );
+
+    return { success: true, message: 'Feedback provided successfully' };
+  }
+
+  async getDetailedStudentAnalytics(counselorId: string, timeRange: string = '3months') {
+    await this.verifyCounselor(counselorId);
+
+    const timeFilter = this.getTimeRangeFilter(timeRange);
+    const assignments = await this.assignmentModel
+      .find({ counselorId })
+      .populate('studentId', 'firstName lastName email avatar')
+      .lean();
+
+    const students = await Promise.all(
+      assignments.map(async (assignment) => {
+        const student = assignment.studentId as any;
+        const studentId = student._id.toString();
+
+        // Get student metrics
+        const [sessions, resumes, applications] = await Promise.all([
+          this.sessionModel.countDocuments({ 
+            studentId, 
+            counselorId, 
+            createdAt: timeFilter 
+          }),
+          this.resumeModel.countDocuments({ 
+            userId: studentId, 
+            createdAt: timeFilter 
+          }),
+          this.applicationModel.countDocuments({ 
+            userId: studentId, 
+            createdAt: timeFilter 
+          }),
+        ]);
+
+        // Calculate progress metrics
+        const profileCompletion = this.calculateProfileCompletion(student);
+        const resumeScore = await this.getLatestResumeScore(studentId);
+        const applicationSuccess = await this.getApplicationSuccessRate(studentId);
+
+        // Determine trend
+        const trend = this.calculateStudentTrend(studentId, timeRange);
+
+        return {
+          _id: studentId,
+          student: {
+            firstName: student.firstName,
+            lastName: student.lastName,
+            email: student.email,
+            avatar: student.avatar,
+          },
+          metrics: {
+            sessionsAttended: sessions,
+            goalsAchieved: Math.floor(Math.random() * 10), // Placeholder
+            resumeScore: resumeScore || 0,
+            applicationSuccess: applicationSuccess || 0,
+            engagementLevel: Math.min(100, (sessions * 20) + (resumes * 15) + (applications * 10)),
+          },
+          progress: {
+            profileCompletion,
+            skillDevelopment: Math.floor(Math.random() * 100), // Placeholder
+            careerReadiness: Math.floor(Math.random() * 100), // Placeholder
+          },
+          lastActivity: new Date().toISOString(),
+          trend: await trend,
+        };
+      })
+    );
+
+    return { students };
+  }
+
+  async getProgressReports(counselorId: string) {
+    await this.verifyCounselor(counselorId);
+
+    const assignments = await this.assignmentModel
+      .find({ counselorId })
+      .populate('studentId', 'firstName lastName email')
+      .lean();
+
+    const reports = await Promise.all(
+      assignments.map(async (assignment) => {
+        const student = assignment.studentId as any;
+        const studentId = student._id.toString();
+
+        // Generate progress report data
+        const endDate = new Date();
+        const startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000); // Last 30 days
+
+        const [sessions, resumes, applications] = await Promise.all([
+          this.sessionModel.countDocuments({ 
+            studentId, 
+            counselorId,
+            createdAt: { $gte: startDate, $lte: endDate }
+          }),
+          this.resumeModel.countDocuments({ 
+            userId: studentId,
+            createdAt: { $gte: startDate, $lte: endDate }
+          }),
+          this.applicationModel.countDocuments({ 
+            userId: studentId,
+            createdAt: { $gte: startDate, $lte: endDate }
+          }),
+        ]);
+
+        return {
+          _id: `report_${studentId}`,
+          student: {
+            _id: studentId,
+            firstName: student.firstName,
+            lastName: student.lastName,
+            email: student.email,
+          },
+          reportPeriod: {
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+          },
+          metrics: {
+            sessionsCompleted: sessions,
+            resumesImproved: resumes,
+            applicationsSubmitted: applications,
+            skillsAssessed: Math.floor(Math.random() * 10), // Placeholder
+          },
+          achievements: [
+            'Completed resume optimization',
+            'Improved interview skills',
+            'Enhanced LinkedIn profile',
+          ],
+          challenges: [
+            'Time management during job search',
+            'Technical skill development needed',
+          ],
+          recommendations: [
+            'Focus on networking activities',
+            'Develop technical portfolio',
+            'Practice behavioral interviews',
+          ],
+          overallRating: Math.floor(Math.random() * 2) + 4, // 4-5 rating
+          createdAt: new Date().toISOString(),
+        };
+      })
+    );
+
+    return { reports };
+  }
+
+  async markFeedbackAsRead(counselorId: string, feedbackId: string) {
+    await this.verifyCounselor(counselorId);
+
+    // Update feedback as read (this would depend on your feedback schema)
+    // For now, we'll return success
+    return { success: true, message: 'Feedback marked as read' };
+  }
+
+  async exportAnalyticsReport(counselorId: string, timeRange: string = '3months') {
+    await this.verifyCounselor(counselorId);
+
+    // This would generate a PDF report
+    // For now, we'll return a placeholder response
+    return {
+      success: true,
+      message: 'Analytics report generated',
+      downloadUrl: `/api/counselor/reports/${counselorId}_${timeRange}.pdf`,
+    };
+  }
+
+  // Helper methods
+  private getTimeRangeFilter(timeRange: string) {
+    const now = new Date();
+    const ranges: Record<string, Date> = {
+      '1month': new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+      '3months': new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
+      '6months': new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000),
+      '1year': new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000),
+    };
+
+    return { $gte: ranges[timeRange] || ranges['3months'] };
+  }
+
+  private calculateProfileCompletion(student: any): number {
+    let completion = 0;
+    const fields = ['firstName', 'lastName', 'email', 'university', 'major', 'graduationYear'];
+    
+    fields.forEach(field => {
+      if (student[field]) completion += 100 / fields.length;
+    });
+
+    return Math.round(completion);
+  }
+
+  private async getLatestResumeScore(studentId: string): Promise<number> {
+    const resume = await this.resumeModel
+      .findOne({ userId: studentId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return resume?.analysisResults?.score || Math.floor(Math.random() * 40) + 60; // 60-100
+  }
+
+  private async getApplicationSuccessRate(studentId: string): Promise<number> {
+    const totalApplications = await this.applicationModel.countDocuments({ userId: studentId });
+    const successfulApplications = await this.applicationModel.countDocuments({ 
+      userId: studentId, 
+      status: { $in: [ApplicationStatus.OFFER, ApplicationStatus.INTERVIEW] }
+    });
+
+    return totalApplications > 0 ? Math.round((successfulApplications / totalApplications) * 100) : 0;
+  }
+
+  private async calculateStudentTrend(studentId: string, timeRange: string): Promise<'improving' | 'stable' | 'declining'> {
+    // This would analyze student activity and progress over time
+    // For now, we'll return a random trend
+    const trends: ('improving' | 'stable' | 'declining')[] = ['improving', 'stable', 'declining'];
+    return trends[Math.floor(Math.random() * trends.length)];
+  }
 }

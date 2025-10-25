@@ -280,6 +280,57 @@ export class CounselorController {
     return this.counselorService.getSkillsGapAnalysis(counselorId);
   }
 
+  // ====== ADDITIONAL ENDPOINTS FOR FRONTEND PAGES ======
+
+  @Put('students/:id/feedback')
+  @ApiOperation({ summary: 'Provide feedback for a specific student' })
+  @ApiResponse({ status: 200, description: 'Feedback provided successfully' })
+  provideStudentFeedback(
+    @CurrentUser('id') counselorId: string,
+    @Param('id') studentId: string,
+    @Body() feedbackData: { feedback: string; type?: string; priority?: string },
+  ) {
+    return this.counselorService.provideStudentFeedback(counselorId, studentId, feedbackData);
+  }
+
+  @Get('analytics/students')
+  @ApiOperation({ summary: 'Get detailed student analytics for counselor dashboard' })
+  @ApiResponse({ status: 200, description: 'Detailed student performance analytics' })
+  @ApiQuery({ name: 'timeRange', required: false, description: 'Time range: 1month, 3months, 6months, 1year' })
+  getDetailedStudentAnalytics(
+    @CurrentUser('id') counselorId: string,
+    @Query('timeRange') timeRange: string = '3months',
+  ) {
+    return this.counselorService.getDetailedStudentAnalytics(counselorId, timeRange);
+  }
+
+  @Get('progress-reports')
+  @ApiOperation({ summary: 'Get progress reports for all assigned students' })
+  @ApiResponse({ status: 200, description: 'List of student progress reports' })
+  getProgressReports(@CurrentUser('id') counselorId: string) {
+    return this.counselorService.getProgressReports(counselorId);
+  }
+
+  @Put('feedback/:id/read')
+  @ApiOperation({ summary: 'Mark feedback as read' })
+  @ApiResponse({ status: 200, description: 'Feedback marked as read' })
+  markFeedbackAsRead(
+    @CurrentUser('id') counselorId: string,
+    @Param('id') feedbackId: string,
+  ) {
+    return this.counselorService.markFeedbackAsRead(counselorId, feedbackId);
+  }
+
+  @Get('analytics/export')
+  @ApiOperation({ summary: 'Export analytics report as PDF' })
+  @ApiResponse({ status: 200, description: 'Analytics report PDF' })
+  exportAnalyticsReport(
+    @CurrentUser('id') counselorId: string,
+    @Query('timeRange') timeRange: string = '3months',
+  ) {
+    return this.counselorService.exportAnalyticsReport(counselorId, timeRange);
+  }
+
   // ====== ADMIN-ONLY ENDPOINTS (for student assignment) ======
 
   @Post('assign-student')

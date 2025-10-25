@@ -25,10 +25,10 @@
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
     
-    /* Font families */
-    --font-inter: 'Inter', system-ui, sans-serif;
-    --font-poppins: 'Poppins', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    /* System font families - no external dependencies */
+    --font-inter: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-poppins: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   }
 
   .dark {
@@ -68,6 +68,16 @@
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     font-variant-ligatures: contextual;
     text-rendering: optimizeLegibility;
+    font-display: swap;
+  }
+  
+  /* System fonts - always available */
+  body {
+    font-family: var(--font-inter);
+  }
+  
+  .font-system {
+    font-family: var(--font-inter);
   }
   
   /* Typography improvements */

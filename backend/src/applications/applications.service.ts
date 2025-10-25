@@ -51,6 +51,21 @@ export class ApplicationsService {
     return { ...application, interviews };
   }
 
+  async findAllByJob(jobId: string) {
+    const applications = await this.applicationModel
+      .find({ jobId })
+      .populate('userId', 'firstName lastName email university major graduationYear gpa phone')
+      .populate('resumeId', 'title fileName')
+      .sort({ appliedAt: -1 })
+      .lean();
+
+    // Transform the data to match frontend expectations
+    return applications.map(app => ({
+      ...app,
+      applicant: app.userId, // Map userId to applicant for frontend compatibility
+    }));
+  }
+
   async create(userId: string, createApplicationDto: CreateApplicationDto) {
     // Check if user already applied for this job
     const existingApplication = await this.applicationModel

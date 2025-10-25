@@ -94,9 +94,9 @@ export default function JobsPage() {
 
   const formatSalary = (min?: number, max?: number) => {
     if (!min && !max) return 'Salary not specified';
-    if (min && max) return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-    if (min) return `From $${min.toLocaleString()}`;
-    return `Up to $${max?.toLocaleString()}`;
+    if (min && max) return `₹${min.toLocaleString('en-IN')} - ₹${max.toLocaleString('en-IN')}`;
+    if (min) return `From ₹${min.toLocaleString('en-IN')}`;
+    return `Up to ₹${max?.toLocaleString('en-IN')}`;
   };
 
   const formatDate = (dateString: string) => {
