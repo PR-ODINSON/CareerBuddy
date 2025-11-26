@@ -11,7 +11,7 @@
 
 ---
 
-## 📑 Table of Contents
+## Table of Contents
 
 - [Overview](#-overview)
 - [Live Demo & Credentials](#-live-demo--credentials)
@@ -31,11 +31,11 @@
 
 ---
 
-## 🎯 Overview
+## Overview
 
 CareerBuddy is a full-stack, AI-powered career guidance platform designed to help students and young professionals navigate their career journey with confidence. The platform combines advanced AI capabilities with human mentorship to provide personalized resume optimization, intelligent job matching, and comprehensive career guidance.
 
-### 🌟 The Problem We Solve
+### The Problem We Solve
 
 **For Students:**
 - Difficulty creating ATS-optimized resumes that pass automated screening
@@ -55,20 +55,20 @@ CareerBuddy is a full-stack, AI-powered career guidance platform designed to hel
 - Tracking platform metrics and measuring success
 - Configuring system settings and features
 
-### 💡 Our Solution
+### Our Solution
 
 A unified, AI-powered platform that provides:
 
-✅ **AI-Powered Resume Analysis** - Comprehensive ATS scoring and optimization  
-✅ **Intelligent Job Matching** - Machine learning-based job recommendations  
-✅ **Real-Time Communication** - WebSocket-powered notifications and messaging  
-✅ **Role-Based Dashboards** - Customized experiences for students, counselors, and admins  
-✅ **Comprehensive Analytics** - Track progress, measure success, and gain insights  
-✅ **Scalable Architecture** - Built with modern technologies for growth and performance  
+- **AI-Powered Resume Analysis** - Comprehensive ATS scoring and optimization  
+- **Intelligent Job Matching** - Machine learning-based job recommendations  
+- **Real-Time Communication** - WebSocket-powered notifications and messaging  
+- **Role-Based Dashboards** - Customized experiences for students, counselors, and admins  
+- **Comprehensive Analytics** - Track progress, measure success, and gain insights  
+- **Scalable Architecture** - Built with modern technologies for growth and performance  
 
 ---
 
-## 🔑 Live Demo & Credentials
+## Live Demo & Credentials
 
 ### Test Accounts
 
@@ -93,131 +93,131 @@ A unified, AI-powered platform that provides:
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🎓 Student Features
+### Student Features
 
 #### **Resume Intelligence**
-- 📄 **Multi-Format Upload** - Support for PDF, DOCX, DOC, and TXT files
-- 🎯 **ATS Scoring** - Detailed scoring across 5 dimensions:
+- **Multi-Format Upload** - Support for PDF, DOCX, DOC, and TXT files
+- **ATS Scoring** - Detailed scoring across 5 dimensions:
   - Formatting (structure, consistency, readability)
   - Content Quality (achievements, action verbs, quantified results)
   - Keyword Optimization (industry-specific terms, skill matching)
   - Section Completeness (contact, summary, experience, education, skills)
   - Readability (grammar, clarity, professional tone)
-- 💡 **AI Feedback** - Actionable suggestions categorized by priority
-- 📊 **Skills Extraction** - Automatic identification of technical and soft skills
-- 🔄 **Version Control** - Track resume iterations and improvements
-- ✅ **ATS Compatibility Check** - Ensure resumes pass automated screening
+- **AI Feedback** - Actionable suggestions categorized by priority
+- **Skills Extraction** - Automatic identification of technical and soft skills
+- **Version Control** - Track resume iterations and improvements
+- **ATS Compatibility Check** - Ensure resumes pass automated screening
 
 #### **Job Discovery & Matching**
-- 🤖 **AI-Powered Recommendations** - Intelligent job matching based on:
+- **AI-Powered Recommendations** - Intelligent job matching based on:
   - Skills and experience level
   - Career goals and preferences
   - Location and salary expectations
   - Historical application success
-- 🔍 **Advanced Search** - Filter by location, experience, employment type, salary
-- 🏢 **Company Insights** - Detailed job descriptions and requirements
-- 📱 **Real-Time Updates** - Instant notifications for new matching jobs
-- 💼 **One-Click Apply** - Streamlined application process
+- **Advanced Search** - Filter by location, experience, employment type, salary
+- **Company Insights** - Detailed job descriptions and requirements
+- **Real-Time Updates** - Instant notifications for new matching jobs
+- **One-Click Apply** - Streamlined application process
 
 #### **Application Tracking**
-- 📋 **Status Dashboard** - Track all applications in one place
-- 🔔 **Status Updates** - Real-time notifications on application progress
-- 📅 **Interview Management** - Schedule and track interviews
-- 📊 **Success Analytics** - Measure application success rates
-- 📝 **Cover Letter Storage** - Save and reuse cover letters
+- **Status Dashboard** - Track all applications in one place
+- **Status Updates** - Real-time notifications on application progress
+- **Interview Management** - Schedule and track interviews
+- **Success Analytics** - Measure application success rates
+- **Cover Letter Storage** - Save and reuse cover letters
 
 #### **Career Guidance**
-- 👨‍🏫 **Counselor Assignment** - Matched with career counselors by field
-- 💬 **Real-Time Chat** - WebSocket-powered instant messaging
-- 📈 **Progress Tracking** - Visual dashboards showing skill development
-- 🎯 **Skills Gap Analysis** - Identify areas for improvement
-- 🛤️ **Career Path Recommendations** - AI-generated career trajectories
+- **Counselor Assignment** - Matched with career counselors by field
+- **Real-Time Chat** - WebSocket-powered instant messaging
+- **Progress Tracking** - Visual dashboards showing skill development
+- **Skills Gap Analysis** - Identify areas for improvement
+- **Career Path Recommendations** - AI-generated career trajectories
 
 ---
 
-### 👨‍🏫 Counselor Features
+### Counselor Features
 
 #### **Student Management**
-- 👥 **Student Portfolio** - Comprehensive profiles of assigned students
-- 📊 **Progress Dashboard** - Track student development metrics
-- 📄 **Resume Access** - Review and provide feedback on resumes
-- 🎯 **Goal Tracking** - Monitor student career objectives
-- 📈 **Performance Analytics** - Detailed student progress reports
+- **Student Portfolio** - Comprehensive profiles of assigned students
+- **Progress Dashboard** - Track student development metrics
+- **Resume Access** - Review and provide feedback on resumes
+- **Goal Tracking** - Monitor student career objectives
+- **Performance Analytics** - Detailed student progress reports
 
 #### **Session Management**
-- 📅 **Scheduling System** - Flexible appointment booking
-- 🔔 **Reminders** - Automated session notifications
-- 📝 **Session Notes** - Document discussions and action items
-- ⏱️ **Time Tracking** - Monitor counseling time investment
-- 📊 **Session Analytics** - Measure session effectiveness
+- **Scheduling System** - Flexible appointment booking
+- **Reminders** - Automated session notifications
+- **Session Notes** - Document discussions and action items
+- **Time Tracking** - Monitor counseling time investment
+- **Session Analytics** - Measure session effectiveness
 
 #### **Communication & Feedback**
-- 💬 **Real-Time Messaging** - Instant communication with students
-- 📧 **Email Integration** - Send updates and announcements
-- 📝 **Structured Feedback** - Templated feedback forms
-- 🎯 **Action Plans** - Create and track student action items
-- 📄 **Progress Reports** - Generate detailed student reports
+- **Real-Time Messaging** - Instant communication with students
+- **Email Integration** - Send updates and announcements
+- **Structured Feedback** - Templated feedback forms
+- **Action Plans** - Create and track student action items
+- **Progress Reports** - Generate detailed student reports
 
 #### **Analytics & Insights**
-- 📊 **Performance Metrics** - Track counselor effectiveness
-- 👥 **Student Success Rates** - Monitor placement and progress
-- ⏰ **Session Statistics** - Analyze time and resource allocation
-- 📈 **Trend Analysis** - Identify patterns and opportunities
-- 📥 **Export Capabilities** - Download reports in PDF format
+- **Performance Metrics** - Track counselor effectiveness
+- **Student Success Rates** - Monitor placement and progress
+- **Session Statistics** - Analyze time and resource allocation
+- **Trend Analysis** - Identify patterns and opportunities
+- **Export Capabilities** - Download reports in PDF format
 
 ---
 
-### 👨‍💼 Admin Features
+### Admin Features
 
 #### **User Management**
-- 👤 **Complete CRUD** - Create, read, update, delete all users
-- 🎭 **Role Assignment** - Manage Student, Counselor, and Admin roles
-- ✅ **Account Activation** - Approve/deactivate user accounts
-- 🔍 **User Search** - Advanced filtering and search capabilities
-- 📊 **User Analytics** - Track user growth and engagement
-- 👥 **Bulk Operations** - Manage multiple users efficiently
+- **Complete CRUD** - Create, read, update, delete all users
+- **Role Assignment** - Manage Student, Counselor, and Admin roles
+- **Account Activation** - Approve/deactivate user accounts
+- **User Search** - Advanced filtering and search capabilities
+- **User Analytics** - Track user growth and engagement
+- **Bulk Operations** - Manage multiple users efficiently
 
 #### **Job Management**
-- 💼 **Full Job Control** - Create, edit, delete job postings
-- 📝 **Detailed Descriptions** - Rich job information including:
+- **Full Job Control** - Create, edit, delete job postings
+- **Detailed Descriptions** - Rich job information including:
   - Requirements and qualifications
   - Benefits and perks
   - Company information
   - Salary ranges
-- 🔍 **Advanced Filters** - Filter by location, type, experience, status
-- ✅ **Job Moderation** - Approve/reject job submissions
-- ⏰ **Expiration Management** - Automatic job expiration
-- 📊 **Job Analytics** - Track application rates and success
+- **Advanced Filters** - Filter by location, type, experience, status
+- **Job Moderation** - Approve/reject job submissions
+- **Expiration Management** - Automatic job expiration
+- **Job Analytics** - Track application rates and success
 
 #### **Platform Analytics**
-- 📊 **Dashboard Overview** - Real-time platform statistics
-- 📈 **User Analytics** - Growth trends and engagement metrics
-- 💼 **Job Analytics** - Posting performance and application rates
-- 📄 **Resume Analytics** - Upload and analysis statistics
-- 🎓 **University Insights** - Top universities by student count
-- 📥 **Data Export** - Generate comprehensive reports
+- **Dashboard Overview** - Real-time platform statistics
+- **User Analytics** - Growth trends and engagement metrics
+- **Job Analytics** - Posting performance and application rates
+- **Resume Analytics** - Upload and analysis statistics
+- **University Insights** - Top universities by student count
+- **Data Export** - Generate comprehensive reports
 
 #### **System Configuration**
-- ⚙️ **General Settings** - Site name, description, branding
-- 📧 **Email Configuration** - SMTP settings for notifications
-- 🔒 **Security Policies** - Password requirements, session management
-- 🎚️ **Feature Toggles** - Enable/disable platform features
-- 📏 **System Limits** - Configure usage quotas and rate limits
-- 🛠️ **Maintenance Mode** - Platform-wide maintenance controls
+- **General Settings** - Site name, description, branding
+- **Email Configuration** - SMTP settings for notifications
+- **Security Policies** - Password requirements, session management
+- **Feature Toggles** - Enable/disable platform features
+- **System Limits** - Configure usage quotas and rate limits
+- **Maintenance Mode** - Platform-wide maintenance controls
 
 #### **Real-Time Notifications**
-- 🔔 **Notification System** - Send announcements to all users
-- 🎯 **Targeted Messaging** - Role-based notifications
-- 📱 **WebSocket Integration** - Instant delivery
-- 📊 **Notification Analytics** - Track delivery and engagement
+- **Notification System** - Send announcements to all users
+- **Targeted Messaging** - Role-based notifications
+- **WebSocket Integration** - Instant delivery
+- **Notification Analytics** - Track delivery and engagement
 
 ---
 
-## 👥 User Roles & Capabilities
+## User Roles & Capabilities
 
-### **🎓 STUDENT** (Primary Users)
+### **STUDENT** (Primary Users)
 
 **Core Capabilities:**
 - Create and manage professional profiles
@@ -246,7 +246,7 @@ A unified, AI-powered platform that provides:
 
 ---
 
-### **👨‍🏫 COUNSELOR** (Career Advisors)
+### **COUNSELOR** (Career Advisors)
 
 **Core Capabilities:**
 - Manage assigned student portfolios
@@ -274,7 +274,7 @@ A unified, AI-powered platform that provides:
 
 ---
 
-### **👨‍💼 ADMIN** (Platform Managers)
+### **ADMIN** (Platform Managers)
 
 **Core Capabilities:**
 - Full user account management
@@ -302,7 +302,7 @@ A unified, AI-powered platform that provides:
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### **Frontend**
 
@@ -355,7 +355,7 @@ A unified, AI-powered platform that provides:
 
 ---
 
-## 🏛️ System Architecture
+## System Architecture
 
 ### **High-Level Architecture**
 
@@ -452,7 +452,7 @@ A unified, AI-powered platform that provides:
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### **User Collection**
 
@@ -670,7 +670,7 @@ A unified, AI-powered platform that provides:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### **Prerequisites**
 
@@ -764,7 +764,7 @@ Password: student123
 
 ---
 
-## 💻 Development Guide
+## Development Guide
 
 ### **Backend Development**
 
@@ -978,7 +978,7 @@ CareerBuddy/
 
 ---
 
-## 📚 API Documentation
+## API Documentation
 
 ### **Base URL**
 ```
@@ -1106,7 +1106,7 @@ socket.emit('leave', userId);
 
 ---
 
-## 🔒 Security
+## Security
 
 ### **Authentication & Authorization**
 
@@ -1144,7 +1144,7 @@ socket.emit('leave', userId);
 
 ---
 
-## 🚢 Deployment
+## Deployment
 
 ### **Environment Variables**
 
@@ -1224,7 +1224,7 @@ npm start
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please follow these steps:
 
@@ -1253,13 +1253,13 @@ We welcome contributions! Please follow these steps:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 📧 Contact & Support
+## Contact & Support
 
 - **Author**: PR-ODINSON
 - **Repository**: [github.com/PR-ODINSON/CareerBuddy](https://github.com/PR-ODINSON/CareerBuddy)
@@ -1267,7 +1267,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **NestJS** - Progressive Node.js framework
 - **Next.js** - The React framework for production
@@ -1278,51 +1278,51 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📊 Project Status
+## Project Status
 
-✅ **Current Status**: Production Ready  
-🚀 **Version**: 1.0.0  
-📅 **Last Updated**: November 26, 2025  
+**Current Status**: Production Ready  
+**Version**: 1.0.0  
+**Last Updated**: November 26, 2025  
 
 ### **Implemented Features**
 
-- ✅ Complete authentication system with JWT
-- ✅ Role-based access control (Student, Counselor, Admin)
-- ✅ AI-powered resume analysis and ATS scoring
-- ✅ Intelligent job matching algorithm
-- ✅ Real-time notifications with WebSockets
-- ✅ Comprehensive admin dashboard
-- ✅ Counselor management system
-- ✅ Student portfolio and progress tracking
-- ✅ Application tracking system
-- ✅ Session scheduling and management
-- ✅ Analytics and reporting
-- ✅ Responsive UI with TailwindCSS
-- ✅ API documentation with Swagger
-- ✅ Docker containerization
-- ✅ MongoDB Atlas integration
-- ✅ File upload and processing
-- ✅ Email notifications (SMTP)
+- Complete authentication system with JWT
+- Role-based access control (Student, Counselor, Admin)
+- AI-powered resume analysis and ATS scoring
+- Intelligent job matching algorithm
+- Real-time notifications with WebSockets
+- Comprehensive admin dashboard
+- Counselor management system
+- Student portfolio and progress tracking
+- Application tracking system
+- Session scheduling and management
+- Analytics and reporting
+- Responsive UI with TailwindCSS
+- API documentation with Swagger
+- Docker containerization
+- MongoDB Atlas integration
+- File upload and processing
+- Email notifications (SMTP)
 
 ### **Future Enhancements**
 
-- 🔮 Video call integration for counseling sessions
-- 🔮 Advanced analytics with ML insights
-- 🔮 Mobile application (React Native)
-- 🔮 External job board integrations
-- 🔮 Interview preparation AI assistant
-- 🔮 Company partnership program
-- 🔮 Advanced resume templates
-- 🔮 Skills assessment tests
-- 🔮 Career path recommendations
-- 🔮 Group counseling features
+- Video call integration for counseling sessions
+- Advanced analytics with ML insights
+- Mobile application (React Native)
+- External job board integrations
+- Interview preparation AI assistant
+- Company partnership program
+- Advanced resume templates
+- Skills assessment tests
+- Career path recommendations
+- Group counseling features
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by PR-ODINSON**
+**Made with love by PR-ODINSON**
 
-⭐ Star this repository if you find it helpful!
+Star this repository if you find it helpful!
 
 </div>
